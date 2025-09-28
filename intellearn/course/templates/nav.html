@@ -1,0 +1,27 @@
+<!-- course/templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Intelearn</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <ul>
+            <li><a href="/">หน้าแรก</a></li>
+            <li><a href="#">คอร์สของฉัน</a></li>
+            <li><a href="#">โปรไฟล์</a></li>
+            <li><a href="#">เข้าสู่ระบบ</a></li>
+            <li><a href="#">สมัครสมาชิก</a></li>
+        </ul>
+    </nav>
+
+    <!-- ส่วนเนื้อหาที่แต่ละหน้าใส่มา -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

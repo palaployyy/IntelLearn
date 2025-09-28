@@ -1,0 +1,32 @@
+/* ===== Course Card ===== */
+.course-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.course-card {
+    flex: 1 1 calc(25% - 20px); /* 4 คอร์สต่อแถว */
+    max-width: 300px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+}
+
+/* กำหนดขนาดรูป */
+.course-card img {
+    width: 100%;
+    max-width: 180px;  /* ให้รูปไม่ใหญ่เกินไป */
+    height: auto;
+    margin: 0 auto 15px;
+    display: block;
+}

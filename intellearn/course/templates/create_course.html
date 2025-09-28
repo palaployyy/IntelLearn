@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สร้างคอร์สใหม่</title>
+</head>
+<body>
+    <h1>สร้างคอร์สใหม่</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}  <!-- แสดงฟอร์มที่ถูกจัดการโดย Django -->
+        <button type="submit">บันทึกคอร์ส</button>
+    </form>
+    <a href="{% url 'home' %}">กลับไปที่หน้าแรก</a>
+</body>
+</html>

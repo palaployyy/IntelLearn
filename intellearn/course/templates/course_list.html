@@ -1,0 +1,20 @@
+{% load static %}
+
+{% for course in courses %}
+    <div class="col-md-3">
+        <div class="card mb-4 shadow-sm">
+            {% if course.thumbnail_url %}
+                <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}">
+            {% else %}
+                <img src="{% static 'images/python.png' %}" class="card-img-top" alt="{{ course.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ course.title }}</h5>
+                <p class="card-text">{{ course.description|truncatewords:20 }}</p>
+                <p class="fw-bold">{{ course.price }}</p>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <p>No courses available.</p>
+{% endfor %}
