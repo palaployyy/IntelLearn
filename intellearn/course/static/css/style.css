@@ -1,3 +1,52 @@
+/* ===== Navbar Override ===== */
+.navbar.custom-navbar,
+.navbar.custom-navbar.bg-light,
+.navbar.custom-navbar.bg-white,
+.navbar.custom-navbar.bg-body,
+.navbar.custom-navbar.bg-body-tertiary,
+.navbar.custom-navbar.bg-dark {
+    background-color: #003a70 !important;
+    background: #003a70 !important;
+    --bs-navbar-bg: #003a70 !important; /* Bootstrap 5 variable */
+}
+
+/* Brand และลิงก์ใน Navbar */
+.navbar.custom-navbar .navbar-brand,
+.navbar.custom-navbar .nav-link {
+    color: #ffffff !important;
+}
+
+/* Hover effect */
+.navbar.custom-navbar .nav-link:hover {
+    color: #cce0ff !important;
+}
+
+/* Active link */
+.navbar.custom-navbar .nav-link.active {
+    font-weight: bold;
+    border-bottom: 2px solid #fff;
+}
+
+/* ปุ่มสมัครสมาชิก */
+.navbar.custom-navbar .btn-signup,
+.navbar.custom-navbar .btn.btn-light {
+    background: #f8f9fa;
+    color: #003a70 !important;
+    font-weight: 500;
+    border-radius: 20px;
+    padding: 6px 14px;
+}
+
+.navbar.custom-navbar .btn-signup:hover,
+.navbar.custom-navbar .btn.btn-light:hover {
+    background: #e2e6ea;
+}
+
+/* ===== Footer ===== */
+footer {
+    font-size: 0.9rem;
+}
+
 /* ===== Course Card ===== */
 .course-list {
     display: flex;
@@ -25,8 +74,21 @@
 /* กำหนดขนาดรูป */
 .course-card img {
     width: 100%;
-    max-width: 180px;  /* ให้รูปไม่ใหญ่เกินไป */
+    max-width: 180px;
     height: auto;
     margin: 0 auto 15px;
     display: block;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 992px) {
+    .course-card {
+        flex: 1 1 calc(50% - 20px); /* 2 คอร์สต่อแถว */
+    }
+}
+
+@media (max-width: 576px) {
+    .course-card {
+        flex: 1 1 100%; /* 1 คอร์สต่อแถว */
+    }
 }

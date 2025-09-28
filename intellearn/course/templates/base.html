@@ -12,7 +12,7 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
         <div class="container">
             <a class="navbar-brand" href="/">Intellearn</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -20,11 +20,15 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">หน้าแรก</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">หน้าแรก</a>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="#">คอร์สของฉัน</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">โปรไฟล์</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">เข้าสู่ระบบ</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-primary text-white px-3" href="#">สมัครสมาชิก</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-light text-dark px-3" href="#">สมัครสมาชิก</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -37,7 +41,7 @@
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3">
-        <p class="mb-0">© 2025 Intelearn. All rights reserved.</p>
+        <p class="mb-0">© {% now "Y" %} Intellearn. All rights reserved.</p>
     </footer>
 
     <!-- Bootstrap JS -->
