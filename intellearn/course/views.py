@@ -1,22 +1,23 @@
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Q, Count 
 from django.contrib.auth.decorators import login_required
-from .models import Course
+from django.http import HttpResponseForbidden
+from django.db.models import Q, Count
+from .models import Course, Enrollment, Lesson
 from .forms import CourseForm
-from django.views.generic import DetailView
-from django.contrib.auth import login
 from .forms import RegisterForm
 
+
+# ✅ Home Page (ทุกคนเข้าได้ ไม่ต้อง login)
 class HomeView(ListView):
     model = Course
     template_name = "home.html"
     context_object_name = "courses"
 
     def get_queryset(self):
-        queryset = Course.objects.all().annotate(
-            lesson_count=Count("lessons", distinct=True),
-            student_count=Count("enrollments", distinct=True)
+        queryset = Course.objects.annotate(
+            lesson_count=Count("lessons"),
+            student_count=Count("enrollments")
         )
         search = self.request.GET.get("search")
         field = self.request.GET.get("field")
@@ -36,8 +37,17 @@ class HomeView(ListView):
                 )
         return queryset
 
-@login_required
+
+# ✅ Instructor: Add Course
 def add_course(request):
+    # เช็กว่าล็อกอินหรือยัง
+    if not request.user.is_authenticated:
+        return redirect("login")   # ถ้าไม่ล็อกอิน → ส่งไป login
+
+    # เช็ก role (สมมติ instructor = staff)
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Only instructors can add courses.")
+
     if request.method == "POST":
         form = CourseForm(request.POST)
         if form.is_valid():
@@ -47,11 +57,19 @@ def add_course(request):
             return redirect("home")
     else:
         form = CourseForm()
+
     return render(request, "course_form.html", {"form": form, "title": "Add New Course"})
 
-@login_required
+
 def edit_course(request, pk):
-    course = get_object_or_404(Course, pk=pk, instructor=request.user)
+    course = get_object_or_404(Course, pk=pk)
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if request.user != course.instructor and not request.user.is_superuser:
+        return HttpResponseForbidden("You are not allowed to edit this course.")
+
     if request.method == "POST":
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():
@@ -59,9 +77,12 @@ def edit_course(request, pk):
             return redirect("home")
     else:
         form = CourseForm(instance=course)
+
     return render(request, "course_form.html", {"form": form, "title": f"Edit Course: {course.title}"})
 
 
+
+# ✅ Student: Course Detail (กดเข้าไปดู/Enroll ได้)
 class CourseDetailView(DetailView):
     model = Course
     template_name = "course_detail.html"
@@ -69,18 +90,43 @@ class CourseDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # ดึงบทเรียนทั้งหมดของคอร์สนี้
-        context["lessons"] = self.object.lessons.all().order_by("order")
-        # จำนวนนักเรียน
-        context["students_count"] = self.object.enrollments.count()
+        course = self.get_object()
+        user = self.request.user
+
+        context["lessons"] = course.lessons.all()
+        context["students_count"] = course.enrollments.count()
+        context["is_enrolled"] = False
+
+        if user.is_authenticated:
+            context["is_enrolled"] = Enrollment.objects.filter(student=user, course=course).exists()
+
         return context
-    
+
+    def post(self, request, *args, **kwargs):
+        """ ใช้ตอนกดปุ่ม Enroll """
+        course = self.get_object()
+        user = request.user
+
+        if not user.is_authenticated:
+            return redirect("login")
+
+        # ถ้า enroll ไปแล้วไม่ต้องซ้ำ
+        Enrollment.objects.get_or_create(student=user, course=course)
+        return redirect("course_detail", pk=course.pk)
+
+
+# ✅ Student: My Courses (แสดงคอร์สที่ลงทะเบียนไว้)
+@login_required
+def my_courses(request):
+    courses = Course.objects.filter(enrollments__student=request.user)
+    return render(request, "my_courses.html", {"courses": courses})
+
 def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # ✅ login อัตโนมัติหลังสมัคร
+            login(request, user)  # auto login หลังสมัคร
             return redirect("home")
     else:
         form = RegisterForm()
