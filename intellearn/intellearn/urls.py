@@ -22,4 +22,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("course.urls")), 
     path("accounts/", include("django.contrib.auth.urls")), # รวม urls ของ app
+    path('dashboard/', include('dashboard.urls')),
 ]

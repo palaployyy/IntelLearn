@@ -2,10 +2,13 @@ from django.views.generic import ListView, DetailView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from .models import Course, Enrollment, Lesson
 from .forms import CourseForm
 from .forms import RegisterForm
+from django import forms
+
+
 
 
 # ✅ Home Page (ทุกคนเข้าได้ ไม่ต้อง login)
@@ -40,35 +43,31 @@ class HomeView(ListView):
 
 # ✅ Instructor: Add Course
 def add_course(request):
-    # เช็กว่าล็อกอินหรือยัง
-    if not request.user.is_authenticated:
-        return redirect("login")   # ถ้าไม่ล็อกอิน → ส่งไป login
-
-    # เช็ก role (สมมติ instructor = staff)
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Only instructors can add courses.")
+    # ❌ ลบเช็ก login ออก
+    # ❌ ลบเช็ก is_staff ออก
 
     if request.method == "POST":
         form = CourseForm(request.POST)
         if form.is_valid():
             course = form.save(commit=False)
-            course.instructor = request.user
+            # ถ้าไม่มี instructor (เพราะ user ไม่ได้ login) → set เป็น None ได้
+            if request.user.is_authenticated:
+                course.instructor = request.user
+            else:
+                course.instructor = None  # ✅ ให้ใส่ NULL ได้ (ต้องแก้ model ให้ instructor = null=True ด้วย)
             course.save()
             return redirect("home")
     else:
         form = CourseForm()
-
     return render(request, "course_form.html", {"form": form, "title": "Add New Course"})
+
 
 
 def edit_course(request, pk):
     course = get_object_or_404(Course, pk=pk)
 
-    if not request.user.is_authenticated:
-        return redirect("login")
-
-    if request.user != course.instructor and not request.user.is_superuser:
-        return HttpResponseForbidden("You are not allowed to edit this course.")
+    # ❌ ลบเช็ก login
+    # ❌ ลบเช็กว่าเป็น instructor หรือไม่
 
     if request.method == "POST":
         form = CourseForm(request.POST, instance=course)
@@ -79,6 +78,7 @@ def edit_course(request, pk):
         form = CourseForm(instance=course)
 
     return render(request, "course_form.html", {"form": form, "title": f"Edit Course: {course.title}"})
+
 
 
 
@@ -131,3 +131,54 @@ def register(request):
     else:
         form = RegisterForm()
     return render(request, "registration/register.html", {"form": form})
+
+
+class LessonForm(forms.ModelForm):
+    class Meta:
+        model = Lesson
+        fields = ["title", "content", "video_url", "order"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Lesson title"}),
+            "content": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Lesson content"}),
+            "video_url": forms.URLInput(attrs={"class": "form-control", "placeholder": "Video URL"}),
+            "order": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Order"}),
+        }
+
+# ✅ เพิ่มบทเรียน
+def add_lesson(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+
+    if request.method == "POST":
+        form = LessonForm(request.POST)
+        if form.is_valid():
+            lesson = form.save(commit=False)
+            lesson.course = course
+            lesson.save()
+            return redirect("course_detail", pk=course.id)
+    else:
+        form = LessonForm()
+
+    return render(request, "lesson_form.html", {"form": form, "title": f"Add Lesson to {course.title}"})
+
+
+# ✅ แก้ไขบทเรียน
+def edit_lesson(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+
+    if request.method == "POST":
+        form = LessonForm(request.POST, instance=lesson)
+        if form.is_valid():
+            form.save()
+            return redirect("course_detail", pk=lesson.course.id)
+    else:
+        form = LessonForm(instance=lesson)
+
+    return render(request, "lesson_form.html", {"form": form, "title": f"Edit Lesson: {lesson.title}"})
+
+
+# ✅ ลบบทเรียน
+def delete_lesson(request, lesson_id):
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    course_id = lesson.course.id
+    lesson.delete()
+    return redirect("course_detail", pk=course_id)

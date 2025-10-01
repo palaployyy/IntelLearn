@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="fw-bold mb-4">📚 My Courses</h2>
+
+  <div class="row">
+    {% for course in courses %}
+      <div class="col-md-4">
+        <div class="card mb-4 shadow-sm h-100">
+          {% if course.thumbnail_url %}
+            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ course.title }}</h5>
+            <p class="card-text">{{ course.description|truncatewords:15 }}</p>
+            <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm">Go to Course</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>คุณยังไม่ได้ลงทะเบียนคอร์สใด ๆ</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

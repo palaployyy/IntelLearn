@@ -7,7 +7,7 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h2 class="fw-bold">{{ course.title }}</h2>
-            <p class="text-muted">👨‍🏫 Instructor: {{ course.instructor }}</p>
+            <p class="text-muted">👨‍🏫 Instructor: {{ course.instructor.username }}</p>
 
             {% if course.thumbnail_url %}
                 <img src="{{ course.thumbnail_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
@@ -50,18 +50,39 @@
     <h4 class="mt-4">Course Lessons</h4>
     <ul class="list-group">
         {% for lesson in lessons %}
-            <li class="list-group-item">
-                <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
-                {% if lesson.video_url %}
-                    <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-sm btn-outline-primary float-end">
-                        ▶ Watch Video
-                    </a>
-                {% endif %}
-                <p class="mb-0 text-muted">{{ lesson.content|truncatewords:20 }}</p>
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
+                    {% if lesson.content %}
+                        <p class="mb-0 text-muted">{{ lesson.content|truncatewords:20 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if lesson.video_url %}
+                        <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
+                            ▶ Watch
+                        </a>
+                    {% endif %}
+
+                    <!-- ✅ ปุ่มแก้ไข/ลบสำหรับ Instructor -->
+                    {% if user == course.instructor or user.is_superuser %}
+                        <a href="{% url 'edit_lesson' lesson.id %}" class="btn btn-sm btn-warning me-2">✏ Edit</a>
+                        <a href="{% url 'delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑 Delete</a>
+                    {% endif %}
+                </div>
             </li>
         {% empty %}
             <li class="list-group-item">No lessons available yet.</li>
         {% endfor %}
     </ul>
+
+    <!-- ✅ ปุ่มเพิ่ม Lesson -->
+    {% if user == course.instructor or user.is_superuser %}
+        <div class="mt-3">
+            <a href="{% url 'add_lesson' course.id %}" class="btn btn-success">
+                ➕ Add Lesson
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -9,7 +9,9 @@ class Course(models.Model):
     instructor = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="courses"
+        related_name="courses",
+        null=True,       # ✅ อนุญาตให้ว่าง
+        blank=True       # ✅ อนุญาตไม่กรอกในฟอร์ม
     )
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -20,7 +22,8 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.title} (by {self.instructor})"
+        return f"{self.title} (by {self.instructor})" if self.instructor else self.title
+
 
 
 class Lesson(models.Model):

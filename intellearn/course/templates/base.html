@@ -11,37 +11,101 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- ✅ Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
         <div class="container">
-            <a class="navbar-brand" href="/">Intellearn</a>
+            <a class="navbar-brand" href="{% url 'home' %}">Intellearn</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <!-- หน้าแรก -->
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">หน้าแรก</a>
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                            หน้าแรก
+                        </a>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="#">คอร์สของฉัน</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">โปรไฟล์</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">เข้าสู่ระบบ</a></li>
+
+                    <!-- คอร์สของฉัน -->
                     <li class="nav-item">
-                        <a class="nav-link btn btn-light text-dark px-3" href="#">สมัครสมาชิก</a>
+                        <a class="nav-link" href="{% url 'my_courses' %}">คอร์สของฉัน</a>
                     </li>
+
+                    <!-- ตรวจสอบว่าล็อกอินแล้วหรือยัง -->
+                    {% if user.is_authenticated %}
+                        <!-- โปรไฟล์ -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">โปรไฟล์</a>
+                        </li>
+                        <!-- Logout -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">ออกจากระบบ</a>
+                        </li>
+                    {% else %}
+                        <!-- Login -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">เข้าสู่ระบบ</a>
+                        </li>
+                        <!-- Register -->
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-light text-dark px-3" href="{% url 'register' %}">
+                                สมัครสมาชิก
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- ✅ Main Content -->
     <main class="container my-4">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3">
-        <p class="mb-0">© {% now "Y" %} Intellearn. All rights reserved.</p>
+    <!-- ✅ Footer -->
+    <footer class="bg-dark text-white pt-5 pb-3 mt-5">
+        <div class="container">
+            <div class="row">
+                <!-- โลโก้ & ข้อความ -->
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold">Intellearn</h5>
+                    <p class="text-muted">
+                        แพลตฟอร์มการเรียนรู้ออนไลน์สำหรับทุกคน  
+                        เรียนรู้ได้ทุกที่ ทุกเวลา 🚀
+                    </p>
+                </div>
+
+                <!-- ลิงก์ด่วน -->
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold">เมนูลัด</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'home' %}" class="text-white text-decoration-none">หน้าแรก</a></li>
+                        <li><a href="{% url 'my_courses' %}" class="text-white text-decoration-none">คอร์สของฉัน</a></li>
+                        <li><a href="{% url 'add_course' %}" class="text-white text-decoration-none">เพิ่มคอร์ส</a></li>
+                        <li><a href="{% url 'register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'instructor_dashboard' %}">Dashboard</a></li>
+                    </ul>
+                </div>
+
+                <!-- ติดต่อเรา -->
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold">ติดต่อเรา</h5>
+                    <p class="mb-1">📧 info@intellearn.com</p>
+                    <p class="mb-1">📞 012-345-6789</p>
+                    <p class="mb-0">🏢 กรุงเทพฯ, ประเทศไทย</p>
+                </div>
+            </div>
+
+            <!-- เส้นคั่น -->
+            <hr class="border-light">
+
+            <!-- Copyright -->
+            <div class="text-center">
+                <p class="mb-0">© {% now "Y" %} Intellearn. All rights reserved.</p>
+            </div>
+        </div>
     </footer>
 
     <!-- Bootstrap JS -->
