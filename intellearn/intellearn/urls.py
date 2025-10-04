@@ -25,4 +25,5 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('auth/', include('Authen.urls')),
     path('course/', include('course.urls')), 
+    path("payments/", include("payments.urls")),
 ]
