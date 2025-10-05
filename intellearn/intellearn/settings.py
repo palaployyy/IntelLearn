@@ -84,7 +84,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "intellearn",
         "USER": "postgres",
-        "PASSWORD": "Password",
+        "PASSWORD": "password",
         "HOST": "localhost",
         "PORT": "5432",
     }
