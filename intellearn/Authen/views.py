@@ -4,6 +4,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import get_user_model
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
+from django.urls import reverse_lazy
+from .forms import RegisterForm
 
 User = get_user_model()
 
@@ -33,7 +36,7 @@ def login_view(request):
 # -------------------------------
 def logout_view(request):
     logout(request)
-    return redirect("login")
+    return render(request, "authen/logout.html")
 
 
 # -------------------------------
@@ -65,9 +68,10 @@ def change_password_view(request):
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
-            update_session_auth_hash(request, user)  # เพื่อให้ยังล็อกอินอยู่
+            update_session_auth_hash(request, user)
             messages.success(request, "✅ Password changed successfully.")
-            return redirect("change_password")
+            # เดิม: return redirect("change_password")
+            return redirect("authen:password_change")  # หรือส่งไปหน้า done: redirect("authen:password_change_done")
         else:
             messages.error(request, "❌ Please correct the error below.")
     else:

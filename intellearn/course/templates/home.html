@@ -31,9 +31,7 @@
 <!-- Featured Courses -->
 <div class="d-flex justify-content-between align-items-center mt-5">
     <h2 class="mb-0">Featured Courses</h2>
-    <a href="{% url 'add_course' %}" class="btn btn-success">
-        ➕ Add Course
-    </a>
+    <a href="{% url 'course:add_course' %}" class="btn btn-success">➕ Add Course</a>
 </div>
 
 <!-- Courses Grid -->
@@ -57,9 +55,9 @@
 
                     <div class="mt-auto d-flex gap-2">
                         <!-- ปุ่มแก้ไข -->
-                        <a href="{% url 'edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">แก้ไข</a>
+                        <a href="{% url 'course:edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">แก้ไข</a>
                         <!-- ✅ ปุ่มดูรายละเอียด -->
-                        <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm flex-fill">ดูรายละเอียด</a>
+                        <a href="{% url 'course:course_detail' course.id %}" class="btn btn-primary btn-sm flex-fill">ดูรายละเอียด</a>
                     </div>
                 </div>
             </div>

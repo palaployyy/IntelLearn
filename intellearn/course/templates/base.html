@@ -14,7 +14,7 @@
     <!-- ✅ Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">Intellearn</a>
+            <a class="navbar-brand" href="{% url 'course:home' %}">Intellearn</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -22,14 +22,13 @@
                 <ul class="navbar-nav ms-auto">
                     <!-- หน้าแรก -->
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
-                            หน้าแรก
-                        </a>
+                        <a class="nav-link {% if request.resolver_match.app_name == 'course' and request.resolver_match.url_name == 'home' %}active{% endif %}"
+                            href="{% url 'course:home' %}">หน้าแรก</a>
                     </li>
 
                     <!-- คอร์สของฉัน -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'my_courses' %}">คอร์สของฉัน</a>
+                        <a class="nav-link" href="{% url 'course:my_courses' %}">คอร์สของฉัน</a>
                     </li>
 
                     <!-- ตรวจสอบว่าล็อกอินแล้วหรือยัง -->
@@ -49,9 +48,7 @@
                         </li>
                         <!-- Register -->
                         <li class="nav-item">
-                            <a class="nav-link btn btn-light text-dark px-3" href="{% url 'register' %}">
-                                สมัครสมาชิก
-                            </a>
+                            <a class="nav-link btn btn-light text-dark px-3" href="{% url 'course:register' %}">สมัครสมาชิก</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -81,11 +78,13 @@
                 <div class="col-md-4 mb-3">
                     <h5 class="fw-bold">เมนูลัด</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{% url 'home' %}" class="text-white text-decoration-none">หน้าแรก</a></li>
-                        <li><a href="{% url 'my_courses' %}" class="text-white text-decoration-none">คอร์สของฉัน</a></li>
-                        <li><a href="{% url 'add_course' %}" class="text-white text-decoration-none">เพิ่มคอร์ส</a></li>
-                        <li><a href="{% url 'register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'instructor_dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'course:home' %}" class="text-white text-decoration-none">หน้าแรก</a></li>
+                        <li><a href="{% url 'course:my_courses' %}" class="text-white text-decoration-none">คอร์สของฉัน</a></li>
+                        <li><a href="{% url 'course:add_course' %}" class="text-white text-decoration-none">เพิ่มคอร์ส</a></li>
+                        <li><a href="{% url 'course:register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
+                        <a class="nav-link" href="{% url 'authen:logout' %}">ออกจากระบบ</a>
+                        {# ถ้า dashboard มี app_name='dashboard' #}
+                        <a class="nav-link" href="{% url 'dashboard:instructor_dashboard' %}">Dashboard</a>
                     </ul>
                 </div>
 

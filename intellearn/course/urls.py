@@ -15,4 +15,5 @@ urlpatterns = [
     path("lesson/<int:lesson_id>/edit/", edit_lesson, name="edit_lesson"),
     path("lesson/<int:lesson_id>/delete/", delete_lesson, name="delete_lesson"),
     path("list/", HomeView.as_view(), name="course_list"),
+    
 ]

@@ -1,10 +1,13 @@
 # authen/urls.py
 from django.urls import path
-from . import views
+from .views import login_view, logout_view, register_view, change_password_view
+
+app_name = "authen"
 
 urlpatterns = [
-    path("login/", views.login_view, name="login"),
-    path("logout/", views.logout_view, name="logout"),
-    path("register/", views.register_view, name="register"),
-    path("change-password/", views.change_password_view, name="change_password"),
+    path("login/", login_view, name="login"),
+    path("logout/", logout_view, name="logout"),
+    path("register/", register_view, name="register"),
+    path("password/change/", change_password_view, name="password_change"),
 ]
+

@@ -20,10 +20,13 @@ from course.views import HomeView   # ✅ import จาก app
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("course.urls")), 
+    path("", include(("course.urls", "course"), namespace="course")),
     path("accounts/", include("django.contrib.auth.urls")), # รวม urls ของ app
-    path('dashboard/', include('dashboard.urls')),
+    path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
     path('auth/', include('Authen.urls')),
-    path('course/', include('course.urls')), 
-    path("payments/", include("payments.urls")),
+    path('course/', include('course.urls')),
+    path("auth/", include(("Authen.urls", "authen"), namespace="authen")),
+
+
+    # path("payments/", include("payments.urls")),
 ]
