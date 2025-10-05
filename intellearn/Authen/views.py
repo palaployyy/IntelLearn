@@ -8,6 +8,7 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView,
 from django.urls import reverse_lazy
 from .forms import RegisterForm
 
+
 User = get_user_model()
 
 # -------------------------------
@@ -78,3 +79,7 @@ def change_password_view(request):
         form = PasswordChangeForm(request.user)
     return render(request, "authen/change_password.html", {"form": form})
 
+
+@login_required
+def profile_view(request):
+    return render(request, "authen/profile.html")

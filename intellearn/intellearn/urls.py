@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from course.views import HomeView   # ✅ import จาก app
+from Authen.views import logout_view 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,6 +27,8 @@ urlpatterns = [
     path('auth/', include('Authen.urls')),
     path('course/', include('course.urls')),
     path("auth/", include(("Authen.urls", "authen"), namespace="authen")),
+    path("accounts/logout/", logout_view, name="accounts_logout"),
+    path("accounts/", include("django.contrib.auth.urls")),
 
 
     # path("payments/", include("payments.urls")),

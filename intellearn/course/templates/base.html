@@ -23,7 +23,7 @@
                     <!-- หน้าแรก -->
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.app_name == 'course' and request.resolver_match.url_name == 'home' %}active{% endif %}"
-                            href="{% url 'course:home' %}">หน้าแรก</a>
+                           href="{% url 'course:home' %}">หน้าแรก</a>
                     </li>
 
                     <!-- คอร์สของฉัน -->
@@ -31,24 +31,30 @@
                         <a class="nav-link" href="{% url 'course:my_courses' %}">คอร์สของฉัน</a>
                     </li>
 
-                    <!-- ตรวจสอบว่าล็อกอินแล้วหรือยัง -->
                     {% if user.is_authenticated %}
-                        <!-- โปรไฟล์ -->
+                        <!-- ✅ โปรไฟล์ -->
                         <li class="nav-item">
-                            <a class="nav-link" href="#">โปรไฟล์</a>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" 
+                               href="{% url 'authen:profile' %}">
+                               โปรไฟล์
+                            </a>
                         </li>
-                        <!-- Logout -->
+
+                        <!-- ✅ Logout ใช้ form เพื่อป้องกัน CSRF -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">ออกจากระบบ</a>
+                            <form action="{% url 'authen:logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link text-white p-0 m-0">ออกจากระบบ</button>
+                            </form>
                         </li>
                     {% else %}
                         <!-- Login -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">เข้าสู่ระบบ</a>
+                            <a class="nav-link" href="{% url 'authen:login' %}">เข้าสู่ระบบ</a>
                         </li>
                         <!-- Register -->
                         <li class="nav-item">
-                            <a class="nav-link btn btn-light text-dark px-3" href="{% url 'course:register' %}">สมัครสมาชิก</a>
+                            <a class="nav-link btn btn-light text-dark px-3" href="{% url 'authen:register' %}">สมัครสมาชิก</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -81,10 +87,18 @@
                         <li><a href="{% url 'course:home' %}" class="text-white text-decoration-none">หน้าแรก</a></li>
                         <li><a href="{% url 'course:my_courses' %}" class="text-white text-decoration-none">คอร์สของฉัน</a></li>
                         <li><a href="{% url 'course:add_course' %}" class="text-white text-decoration-none">เพิ่มคอร์ส</a></li>
-                        <li><a href="{% url 'course:register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
-                        <a class="nav-link" href="{% url 'authen:logout' %}">ออกจากระบบ</a>
-                        {# ถ้า dashboard มี app_name='dashboard' #}
-                        <a class="nav-link" href="{% url 'dashboard:instructor_dashboard' %}">Dashboard</a>
+                        <li><a href="{% url 'authen:register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
+
+                        {% if user.is_authenticated %}
+                        <li>
+                            <form action="{% url 'authen:logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link text-white p-0 m-0">ออกจากระบบ</button>
+                            </form>
+                        </li>
+                        {% endif %}
+
+                        <li><a href="{% url 'dashboard:instructor_dashboard' %}" class="text-white text-decoration-none">Dashboard</a></li>
                     </ul>
                 </div>
 

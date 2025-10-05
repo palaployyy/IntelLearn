@@ -2,21 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Intelearn</title>
+    <title>Intellearn</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <!-- Navbar -->
-   <nav class="navbar custom-navbar">
-    <ul class="nav-list">
-        <li><a href="/">หน้าแรก</a></li>
-        <li><a href="#">คอร์สของฉัน</a></li>
-        <li><a href="#">โปรไฟล์</a></li>
-        <li><a href="#">เข้าสู่ระบบ</a></li>
-        <li><a class="btn-signup" href="#">สมัครสมาชิก</a></li>
-    </ul>
-</nav>
+    <!-- ✅ Navbar -->
+    <nav class="navbar custom-navbar">
+        <ul class="nav-list">
+            <!-- หน้าแรก -->
+            <li><a href="{% url 'course:home' %}">หน้าแรก</a></li>
+
+            <!-- คอร์สของฉัน -->
+            <li><a href="{% url 'course:my_courses' %}">คอร์สของฉัน</a></li>
+
+            {% if user.is_authenticated %}
+                <!-- โปรไฟล์ -->
+                <li><a href="{% url 'authen:profile' %}">โปรไฟล์</a></li>
+
+                <!-- ออกจากระบบ (ใช้ form ป้องกัน CSRF) -->
+                <li>
+                    <form action="{% url 'authen:logout' %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-link logout-btn">ออกจากระบบ</button>
+                    </form>
+                </li>
+            {% else %}
+                <!-- เข้าสู่ระบบ -->
+                <li><a href="{% url 'authen:login' %}">เข้าสู่ระบบ</a></li>
+
+                <!-- สมัครสมาชิก -->
+                <li><a class="btn-signup" href="{% url 'authen:register' %}">สมัครสมาชิก</a></li>
+            {% endif %}
+        </ul>
+    </nav>
 
     <!-- ส่วนเนื้อหาที่แต่ละหน้าใส่มา -->
     <main>

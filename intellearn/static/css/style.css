@@ -1,94 +1,39 @@
-/* ===== Navbar Override ===== */
-.navbar.custom-navbar,
-.navbar.custom-navbar.bg-light,
-.navbar.custom-navbar.bg-white,
-.navbar.custom-navbar.bg-body,
-.navbar.custom-navbar.bg-body-tertiary,
-.navbar.custom-navbar.bg-dark {
-    background-color: #003a70 !important;
-    background: #003a70 !important;
-    --bs-navbar-bg: #003a70 !important; /* Bootstrap 5 variable */
+/* ทำให้ปุ่ม logout (btn-link + nav-link) ดูเหมือนลิงก์ในเมนู */
+.navbar.custom-navbar .btn-link.nav-link {
+  background: transparent;
+  border: 0;
+  color: #ffffff !important;
+  padding: .5rem 1rem;        /* ให้เท่ากับลิงก์เมนู */
+  line-height: 1.25;
+  text-decoration: none;
+  display: inline-block;       /* ป้องกันความสูงยุบ */
+  cursor: pointer;
 }
 
-/* Brand และลิงก์ใน Navbar */
-.navbar.custom-navbar .navbar-brand,
-.navbar.custom-navbar .nav-link {
-    color: #ffffff !important;
+/* hover ของปุ่ม logout ให้เหมือนลิงก์ */
+.navbar.custom-navbar .btn-link.nav-link:hover {
+  color: #cce0ff !important;
 }
 
-/* Hover effect */
-.navbar.custom-navbar .nav-link:hover {
-    color: #cce0ff !important;
+/* จัดแนว form ใน navbar ไม่ให้ดัน layout */
+.navbar.custom-navbar .nav-item form.d-inline {
+  display: inline;             /* คงบรรทัดเดียวกับเมนู */
 }
 
-/* Active link */
+/* (ตัวค้ำให้ navbar ไม่แบน) */
+.navbar.custom-navbar { padding: .75rem 0; }
+.navbar.custom-navbar .navbar-nav .nav-link,
+.navbar.custom-navbar .navbar-brand { padding: .5rem 1rem; line-height: 1.25; }
+
+/* เส้นขีดใต้ของเมนู active แบบไม่ดันความสูง */
 .navbar.custom-navbar .nav-link.active {
-    font-weight: bold;
-    border-bottom: 2px solid #fff;
+  position: relative;
+  font-weight: 700;
+  border-bottom: none;
 }
-
-/* ปุ่มสมัครสมาชิก */
-.navbar.custom-navbar .btn-signup,
-.navbar.custom-navbar .btn.btn-light {
-    background: #f8f9fa;
-    color: #003a70 !important;
-    font-weight: 500;
-    border-radius: 20px;
-    padding: 6px 14px;
-}
-
-.navbar.custom-navbar .btn-signup:hover,
-.navbar.custom-navbar .btn.btn-light:hover {
-    background: #e2e6ea;
-}
-
-/* ===== Footer ===== */
-footer {
-    font-size: 0.9rem;
-}
-
-/* ===== Course Card ===== */
-.course-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.course-card {
-    flex: 1 1 calc(25% - 20px); /* 4 คอร์สต่อแถว */
-    max-width: 300px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease-in-out;
-}
-
-.course-card:hover {
-    transform: translateY(-5px);
-}
-
-/* กำหนดขนาดรูป */
-.course-card img {
-    width: 100%;
-    max-width: 180px;
-    height: auto;
-    margin: 0 auto 15px;
-    display: block;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 992px) {
-    .course-card {
-        flex: 1 1 calc(50% - 20px); /* 2 คอร์สต่อแถว */
-    }
-}
-
-@media (max-width: 576px) {
-    .course-card {
-        flex: 1 1 100%; /* 1 คอร์สต่อแถว */
-    }
+.navbar.custom-navbar .nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -6px;
+  height: 3px; background: #fff; border-radius: 2px;
 }
