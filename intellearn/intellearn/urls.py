@@ -24,10 +24,10 @@ urlpatterns = [
     path("", include(("course.urls", "course"), namespace="course")),
     path("accounts/", include("django.contrib.auth.urls")), # รวม urls ของ app
     path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
-    path('auth/', include('Authen.urls')),
+    # path('auth/', include('Authen.urls')),
     path('course/', include('course.urls')),
-    path("auth/", include(("Authen.urls", "authen"), namespace="authen")),
-    path("accounts/logout/", logout_view, name="accounts_logout"),
+    # path("auth/", include(("Authen.urls", "authen"), namespace="authen")),
+    # path("accounts/logout/", logout_view, name="accounts_logout"),
     path("accounts/", include("django.contrib.auth.urls")),
 
 
