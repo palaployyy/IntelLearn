@@ -34,11 +34,12 @@ urlpatterns = [
     path("course/", include(("course.urls", "course"), namespace="course")),
 
     # เส้นทางของ Authen (ระบบล็อกอิน / สมัคร / โปรไฟล์)
-    path("auth/", include(("Authen.urls", "authen"), namespace="authen")),
+    path("auth/", include(("authen.urls", "authen"), namespace="authen")),
+
 
     # เส้นทางของ Dashboard
     path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
 
     # เส้นทางมาตรฐานของ Django Authentication (login/logout/reset password)
-    path("accounts/", include("django.contrib.auth.urls")),
+    # path("accounts/", include("django.contrib.auth.urls")),
 ]

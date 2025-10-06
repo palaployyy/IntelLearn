@@ -55,7 +55,8 @@ def register_view(request):
         else:
             user = User.objects.create_user(username=username, email=email, password=password, role=role)
             messages.success(request, "Account created successfully! Please log in.")
-            return redirect("login")
+            return redirect("authen:login")
+
 
     return render(request, "authen/register.html")
 
@@ -72,7 +73,7 @@ def change_password_view(request):
             update_session_auth_hash(request, user)
             messages.success(request, "✅ Password changed successfully.")
             # เดิม: return redirect("change_password")
-            return redirect("authen:password_change")  # หรือส่งไปหน้า done: redirect("authen:password_change_done")
+            return redirect("authen:change_password")  # หรือส่งไปหน้า done: redirect("authen:password_change_done")
         else:
             messages.error(request, "❌ Please correct the error below.")
     else:

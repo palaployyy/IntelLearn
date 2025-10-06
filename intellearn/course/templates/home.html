@@ -31,7 +31,11 @@
 <!-- Featured Courses -->
 <div class="d-flex justify-content-between align-items-center mt-5">
     <h2 class="mb-0">Featured Courses</h2>
-    <a href="{% url 'course:add_course' %}" class="btn btn-success">➕ Add Course</a>
+
+    {% if user.is_authenticated and user.groups.all.0.name == "instructor" %}
+        <!-- ✅ instructor เท่านั้นที่เห็นปุ่มนี้ -->
+        <a href="{% url 'course:add_course' %}" class="btn btn-success">➕ Add Course</a>
+    {% endif %}
 </div>
 
 <!-- Courses Grid -->
@@ -54,10 +58,19 @@
                     <p class="fw-bold text-success">฿{{ course.price }}</p>
 
                     <div class="mt-auto d-flex gap-2">
-                        <!-- ปุ่มแก้ไข -->
-                        <a href="{% url 'course:edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">แก้ไข</a>
-                        <!-- ✅ ปุ่มดูรายละเอียด -->
-                        <a href="{% url 'course:course_detail' course.id %}" class="btn btn-primary btn-sm flex-fill">ดูรายละเอียด</a>
+                        {% if user.is_authenticated %}
+                            {% if user.groups.all.0.name == "instructor" %}
+                                <!-- 👨‍🏫 instructor เห็นปุ่มแก้ไข -->
+                                <a href="{% url 'course:edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">แก้ไข</a>
+                            {% endif %}
+                            <!-- ✅ ทุกคนที่ล็อกอินเห็นปุ่มดูรายละเอียด -->
+                            <a href="{% url 'course:course_detail' course.id %}" class="btn btn-primary btn-sm flex-fill">ดูรายละเอียด</a>
+                        {% else %}
+                            <!-- ❌ guest เห็นแค่ปุ่มล็อกอิน -->
+                            <a href="{% url 'authen:login' %}" class="btn btn-outline-secondary btn-sm w-100">
+                                เข้าสู่ระบบเพื่อดูรายละเอียด
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

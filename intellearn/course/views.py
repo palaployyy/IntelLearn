@@ -112,7 +112,10 @@ class CourseDetailView(DetailView):
 
         # ถ้า enroll ไปแล้วไม่ต้องซ้ำ
         Enrollment.objects.get_or_create(student=user, course=course)
-        return redirect("course_detail", pk=course.pk)
+        return redirect("course:my_courses")
+
+
+
 
 
 # ✅ Student: My Courses (แสดงคอร์สที่ลงทะเบียนไว้)

@@ -37,3 +37,18 @@
   left: 0; right: 0; bottom: -6px;
   height: 3px; background: #fff; border-radius: 2px;
 }
+
+.navbar .btn.btn-light {
+    background-color: #f8f9fa;       /* สีพื้นหลังปกติ (ขาวนวล) */
+    color: #212529;                  /* สีตัวอักษร */
+    border: none;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+/* เมื่อเอาเมาส์ไปชี้ (hover) */
+.navbar .btn.btn-light:hover {
+    background-color: #ffffff;       /* ขาวจริง */
+    color: #000000;                  /* ตัวอักษรดำ */
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}

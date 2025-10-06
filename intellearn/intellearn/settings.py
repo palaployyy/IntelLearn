@@ -84,7 +84,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "intellearn",
         "USER": "postgres",
-        "PASSWORD": "password",
+        "PASSWORD": "Password",
         "HOST": "localhost",
         "PORT": "5432",
     }
@@ -143,3 +143,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authen.User'
 
+
+LOGIN_URL = '/auth/login/'
+LOGOUT_REDIRECT_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/'
