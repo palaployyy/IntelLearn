@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ชำระเงิน · {{ course.title }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .proof-preview{margin-top:10px;display:none}
+  .proof-preview img{max-width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.12)}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Payment</h1>
+
+<div class="grid">
+  <!-- Course Summary -->
+  <div class="card">
+    <div class="media"><div class="play"></div></div>
+    <div class="title">{{ course.title }}</div>
+    <div class="muted">{{ course.instructor.name|default:course.instructor }}</div>
+    <div class="price">฿{{ course.price|floatformat:2 }}</div>
+    <div class="muted">{{ course.total_lessons|default:"" }} Lessons</div>
+  </div>
+
+  <!-- Payment Form -->
+  <form method="post" enctype="multipart/form-data" class="card" id="payForm">
+    {% csrf_token %}
+
+    <div class="section-title">Payment Information</div>
+
+    <!-- วิธีชำระ -->
+    <div class="radio-row">
+      <label><input type="radio" name="method" value="credit_card"
+        {% if form.data.method %}{% if form.data.method == "credit_card" %}checked{% endif %}
+        {% else %}checked{% endif %}> Credit / Debit Card</label>
+      <span class="badge"><span class="visa"></span><span class="mc"></span></span>
+    </div>
+    <div class="radio-row">
+      <label><input type="radio" name="method" value="transfer"
+        {% if form.data.method == "transfer" %}checked{% endif %}> Bank Transfer</label>
+    </div>
+    <div class="radio-row">
+      <label><input type="radio" name="method" value="promptpay"
+        {% if form.data.method == "promptpay" %}checked{% endif %}> PromptPay</label>
+    </div>
+    {% if form.errors.method %}<div style="color:#fca5a5">{{ form.errors.method|join:", " }}</div>{% endif %}
+
+    <!-- ฟิลด์บัตร (mock) -->
+    <div id="cardFields">
+      <label>Cardholder Name</label>
+      <input type="text" name="cardholder_name" value="{{ form.data.cardholder_name }}" placeholder="ชื่อบนบัตร">
+      <div class="row two">
+        <div>
+          <label>Card Number</label>
+          <input type="text" name="card_number" value="{{ form.data.card_number }}" placeholder="4242 4242 4242 4242">
+        </div>
+        <div>
+          <label>Expiration / CVV</label>
+          <div class="row two">
+            <input type="text" name="expiration" value="{{ form.data.expiration }}" placeholder="MM/YY">
+            <input type="text" name="cvv" value="{{ form.data.cvv }}" placeholder="CVV">
+          </div>
+        </div>
+      </div>
+      <p class="hint">* โหมดทดสอบ (mock) ไม่มีการตัดเงินจริง ระบบจะถือว่าชำระสำเร็จทันที</p>
+    </div>
+
+    <!-- อัปโหลดสลิป -->
+    <div id="slipFields" style="display:none">
+      <label>อัปโหลดสลิป/หลักฐานการโอน</label>
+      <input type="file" name="proof" accept="image/*" id="proofInput">
+      {% if form.errors.proof %}<div style="color:#fca5a5">{{ form.errors.proof|join:", " }}</div>{% endif %}
+      <div class="proof-preview" id="proofPreview"><img id="proofImg" alt=""></div>
+      <p class="hint">รองรับ JPG/PNG/WEBP ขนาดไม่เกิน 5MB</p>
+    </div>
+
+    <div class="section-title">Billing Information</div>
+    <div class="row two">
+      <div>
+        <label>First Name</label>
+        <input type="text" name="first_name" placeholder="ชื่อ">
+      </div>
+      <div>
+        <label>Last Name</label>
+        <input type="text" name="last_name" placeholder="นามสกุล">
+      </div>
+    </div>
+
+    <div class="total">
+      <span>Total</span>
+      <span>฿{{ course.price|floatformat:2 }}</span>
+    </div>
+
+    <button class="btn" type="submit" id="submitBtn">Confirm and Pay</button>
+
+    {% if form.non_field_errors %}
+      <div style="margin-top:10px;color:#fca5a5">{{ form.non_field_errors }}</div>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const methodRadios = document.querySelectorAll('input[name="method"]');
+  const card = document.getElementById('cardFields');
+  const slip = document.getElementById('slipFields');
+  const btn = document.getElementById('submitBtn');
+  const proofInput = document.getElementById('proofInput');
+  const proofPreview = document.getElementById('proofPreview');
+  const proofImg = document.getElementById('proofImg');
+
+  function updateUI() {
+    const val = document.querySelector('input[name="method"]:checked').value;
+    const isCard = val === 'credit_card';
+    card.style.display = isCard ? 'block' : 'none';
+    slip.style.display = isCard ? 'none' : 'block';
+    btn.textContent = isCard ? 'Confirm and Pay (Mock)' : 'Submit & Wait for Review';
+  }
+  methodRadios.forEach(r => r.addEventListener('change', updateUI));
+  updateUI();
+
+  if (proofInput) {
+    proofInput.addEventListener('change', e => {
+      const f = e.target.files?.[0];
+      if (!f) { proofPreview.style.display = 'none'; return; }
+      const url = URL.createObjectURL(f);
+      proofImg.src = url;
+      proofPreview.style.display = 'block';
+    });
+  }
+</script>
+{% endblock %}

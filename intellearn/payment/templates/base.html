@@ -1,0 +1,126 @@
+{% load static %}
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}EduPlatform{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- THEME / BASE STYLES -->
+  <style>
+    :root{
+      --bg-a:#0b1220; --bg-b:#0e1b3a;
+      --card:#101a2e; --muted:#94a3b8;
+      --text:#e5e7eb; --accent:#2dd4ff; --primary:#3b82f6;
+      --ring: rgba(45,212,255,.40);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #11224a 0%, transparent 60%),
+        radial-gradient(1000px 500px at 110% 10%, #0f2b57 0%, transparent 60%),
+        linear-gradient(180deg,var(--bg-a),var(--bg-b));
+      min-height:100vh;
+    }
+
+    /* Navbar */
+    .navbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.00));
+      position:sticky; top:0; z-index:50; backdrop-filter: blur(6px);
+    }
+    .brand{font-weight:800; letter-spacing:.4px}
+    .nav a{color:var(--text); text-decoration:none; opacity:.85; margin-left:16px; font-size:14px}
+    .nav a:hover{opacity:1}
+
+    /* Layout */
+    .wrap{max-width:1100px;margin:0 auto;padding:32px 16px}
+    h1{font-size:clamp(28px,4vw,40px);margin:0 0 24px 4px;letter-spacing:.4px}
+    .grid{display:grid; gap:24px; grid-template-columns:1fr}
+    @media (min-width:900px){ .grid{ grid-template-columns: 1fr 1.2fr } }
+
+    /* Cards & common UI */
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px; padding:22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35),
+                  0 0 0 1px rgba(61,138,255,.05) inset;
+      backdrop-filter: blur(6px);
+    }
+    .media{aspect-ratio:16/9;background:#0b132b;border-radius:12px;display:grid;place-items:center;margin-bottom:16px}
+    .play{width:0;height:0;border-left:20px solid var(--text);border-top:12px solid transparent;border-bottom:12px solid transparent;opacity:.8}
+    .title{font-weight:700;font-size:20px;margin:8px 0 4px}
+    .muted{color:var(--muted)}
+    .price{font-size:28px;font-weight:800;margin:6px 0 2px}
+    .pill{display:inline-flex;gap:6px;align-items:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02);padding:8px 10px;border-radius:12px}
+
+    label{display:block;font-size:14px;margin:12px 0 6px}
+    input[type="text"], input[type="file"]{
+      width:100%; background:#0e1730; color:var(--text);
+      border:1px solid rgba(255,255,255,.15); border-radius:10px; padding:12px 14px; outline:none;
+    }
+    input[type="text"]:focus{border-color:var(--accent); box-shadow:0 0 0 6px var(--ring)}
+    .radio-row{display:flex;gap:14px;align-items:center;margin:6px 0 12px}
+    .radio-row input{transform:scale(1.2)}
+
+    /* Card brands used in payment form */
+    .badge{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle}
+    .visa,.mc{width:34px;height:22px;border-radius:4px;display:inline-block}
+    .visa{background:#1a1f71}
+    .mc{background:linear-gradient(90deg,#eb001b 0 50%, #f79e1b 50%)}
+
+    .row{display:grid;gap:12px; grid-template-columns:1fr}
+    @media (min-width:660px){ .row.two{ grid-template-columns:1fr 1fr } }
+
+    .total{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:18px;margin:18px 0 12px}
+    .btn{display:inline-block; text-align:center; width:100%; border:0; cursor:pointer;
+         background: radial-gradient(120% 120% at 50% 0%, var(--accent), var(--primary));
+         color:white; padding:14px 16px; font-weight:800; border-radius:12px;
+         box-shadow: 0 10px 25px rgba(59,130,246,.35);
+    }
+    .hint{font-size:12px;color:var(--muted)}
+    .section-title{font-size:18px;font-weight:800;margin:4px 0 8px}
+
+    /* Django messages */
+    .alerts{margin:12px 0}
+    .alert{padding:10px 12px;border-radius:10px;margin:8px 0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+    .alert.success{border-color:rgba(34,197,94,.45)}
+    .alert.info{border-color:rgba(59,130,246,.45)}
+    .alert.warning{border-color:rgba(234,179,8,.45)}
+    .alert.error{border-color:rgba(239,68,68,.55)}
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <header class="navbar">
+    <div class="brand"><a href="/" style="text-decoration:none;color:inherit">EduPlatform</a></div>
+    <nav class="nav">
+      <!-- ปรับลิงก์ให้ตรงโปรเจกต์คุณ -->
+      <a href="/">Home</a>
+      <a href="/courses/">Browse Courses</a>
+      <a href="/dashboard/">Dashboard</a>
+      <a href="/logout/">Logout</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    {% if messages %}
+      <div class="alerts">
+        {% for message in messages %}
+          <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

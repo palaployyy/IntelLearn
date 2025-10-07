@@ -38,7 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'course',
+    "account",
+    "course",
+    "payment",
+    "quiz",
+    "progress",
+    "dashboard",
 ]
 
 MIDDLEWARE = [
@@ -79,7 +84,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "intellearn",
         "USER": "postgres",
-        "PASSWORD": "Password",
+        "PASSWORD": "password",
         "HOST": "localhost",
         "PORT": "5432",
     }
@@ -104,6 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = "account.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -123,9 +129,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # ให้ Django หา static files ในโฟลเดอร์ "static" ที่ root
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, "static"),
+# ]
 
 # ถ้าเป็น production จะเก็บ static ที่นี่
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -135,3 +141,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# เก็บไฟล์สลิป
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
