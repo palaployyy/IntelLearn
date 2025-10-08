@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "account",
     "course",
     "payment",
     "quiz",
@@ -109,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = "account.User"
+AUTH_USER_MODEL = "authen.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
