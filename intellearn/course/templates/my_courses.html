@@ -14,7 +14,7 @@
           <div class="card-body">
             <h5 class="card-title">{{ course.title }}</h5>
             <p class="card-text">{{ course.description|truncatewords:15 }}</p>
-            <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm">Go to Course</a>
+            <a href="{% url 'course:course_detail' course.id %}" class="btn btn-primary btn-sm">Go to Course</a>
           </div>
         </div>
       </div>

@@ -75,3 +75,5 @@ def confirm_payment(request, payment_id):
     _auto_enroll(payment.student, payment.course)
     messages.success(request, "ยืนยันการชำระเงินและเปิดสิทธิ์เรียบร้อย")
     return redirect("admin:payments_payment_changelist")
+
+

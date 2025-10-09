@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}ผลการทำแบบทดสอบ{% endblock %}
+
+{% block content %}
+<h1>ผลการทำแบบทดสอบ</h1>
+<div class="card">
+  <div>แบบทดสอบ: <b>{{ quiz.title }}</b></div>
+  <div>คะแนนที่ได้: <b>{{ submission.score }}</b></div>
+  <div>สถานะ: {% if submission.passed %}<b style="color:#22c55e">ผ่าน</b>{% else %}<b style="color:#ef4444">ไม่ผ่าน</b>{% endif %}</div>
+  <div class="muted">เวลาส่ง: {{ submission.submitted_at|date:"d M Y, H:i" }}</div>
+</div>
+
+<div style="margin-top:14px">
+  <a class="btn" href="/courses/{{ quiz.course.id }}/">กลับไปที่คอร์ส</a>
+</div>
+{% endblock %}

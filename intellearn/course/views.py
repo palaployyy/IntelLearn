@@ -7,8 +7,7 @@ from .models import Course, Enrollment, Lesson
 from .forms import CourseForm
 from .forms import RegisterForm
 from django import forms
-
-
+from django.views import View
 
 
 # ✅ Home Page (ทุกคนเข้าได้ ไม่ต้อง login)
@@ -96,10 +95,17 @@ class CourseDetailView(DetailView):
         context["lessons"] = course.lessons.all()
         context["students_count"] = course.enrollments.count()
         context["is_enrolled"] = False
+        context["is_paid"] = False  # เพิ่มตัวแปรใหม่ตรวจสอบสถานะการชำระเงิน
 
         if user.is_authenticated:
-            context["is_enrolled"] = Enrollment.objects.filter(student=user, course=course).exists()
+            enrollment = Enrollment.objects.filter(student=user, course=course).first()
+            if enrollment:
+                context["is_enrolled"] = True
 
+                # ตรวจสอบว่ามีการชำระเงินแล้ว
+                payment = Payment.objects.filter(student=user, course=course, status="paid").first()
+                if payment:
+                    context["is_paid"] = True
         return context
 
     def post(self, request, *args, **kwargs):
@@ -109,8 +115,14 @@ class CourseDetailView(DetailView):
 
         if not user.is_authenticated:
             return redirect("login")
+        
+        # ตรวจสอบว่ามีการชำระเงินก่อนการลงทะเบียน
+        payment = Payment.objects.filter(student=user, course=course, status="paid").first()
+        if not payment:
+            messages.error(request, "กรุณาทำการชำระเงินก่อนลงทะเบียน")
+            return redirect("payment:checkout", course_id=course.id)  # ไปที่หน้าชำระเงิน
 
-        # ถ้า enroll ไปแล้วไม่ต้องซ้ำ
+        # ถ้าชำระเงินแล้วลงทะเบียน
         Enrollment.objects.get_or_create(student=user, course=course)
         return redirect("course:my_courses")
 
@@ -185,3 +197,8 @@ def delete_lesson(request, lesson_id):
     course_id = lesson.course.id
     lesson.delete()
     return redirect("course_detail", pk=course_id)
+
+class PaymentView(View):
+    def get(self, request, course_id):
+        course = Course.objects.get(id=course_id)
+        return render(request, "payment/payment_form.html", {"course": course})

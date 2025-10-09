@@ -40,6 +40,8 @@ urlpatterns = [
     # เส้นทางของ Dashboard
     path("dashboard/", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
 
+     path("payments/", include(("payment.urls", "payment"), namespace="payment")),
+
     # เส้นทางมาตรฐานของ Django Authentication (login/logout/reset password)
     # path("accounts/", include("django.contrib.auth.urls")),
 ]
