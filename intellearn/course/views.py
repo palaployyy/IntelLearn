@@ -8,6 +8,8 @@ from .forms import CourseForm
 from .forms import RegisterForm
 from django import forms
 from django.views import View
+from django.contrib import messages
+from payment.models import Payment
 
 
 # ✅ Home Page (ทุกคนเข้าได้ ไม่ต้อง login)
@@ -197,6 +199,62 @@ def delete_lesson(request, lesson_id):
     course_id = lesson.course.id
     lesson.delete()
     return redirect("course_detail", pk=course_id)
+
+@login_required
+def delete_course_view(request, course_id):
+    # ✅ ป้องกันกรณี id ไม่เจอ
+    course = get_object_or_404(Course, id=course_id)
+
+    # ✅ ตรวจสอบสิทธิ์
+    if course.instructor != request.user:
+        messages.error(request, "❌ คุณไม่มีสิทธิ์ลบคอร์สนี้")
+        return redirect("course:home")
+
+    if request.method == "POST":
+        course.delete()
+        messages.success(request, "✅ ลบคอร์สเรียบร้อยแล้ว")
+        return redirect("course:home")
+
+    return render(request, "confirm_delete.html", {"course": course})
+
+@login_required
+def instructor_dashboard_view(request):
+    if not request.user.groups.filter(name="instructor").exists():
+        return redirect("course:home")
+
+    # ✅ ดึงเฉพาะคอร์สของ Instructor คนนี้
+    courses = Course.objects.filter(instructor=request.user)
+
+    # ✅ รวมข้อมูล enrollment ของคอร์สแต่ละอัน
+    course_data = []
+    for course in courses:
+        enrollments = Enrollment.objects.filter(course=course)
+        total_students = enrollments.count()
+        completed = enrollments.filter(status="completed").count()
+        active = enrollments.filter(status="active").count()
+        dropped = enrollments.filter(status="dropped").count()
+
+        course_data.append({
+            "course": course,
+            "total_students": total_students,
+            "completed": completed,
+            "active": active,
+            "dropped": dropped,
+        })
+
+    # ✅ สถิติรวม
+    total_courses = courses.count()
+    total_students = Enrollment.objects.filter(course__in=courses).count()
+    total_revenue = sum([c.price * Enrollment.objects.filter(course=c).count() for c in courses])
+
+    context = {
+        "course_data": course_data,
+        "total_courses": total_courses,
+        "total_students": total_students,
+        "total_revenue": total_revenue,
+    }
+
+    return render(request, "instructor_dashboard.html", context)
 
 class PaymentView(View):
     def get(self, request, course_id):

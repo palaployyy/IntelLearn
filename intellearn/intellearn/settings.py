@@ -84,7 +84,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "intellearn",
         "USER": "postgres",
-        "PASSWORD": "password",
+        "PASSWORD": "Password",
         "HOST": "localhost",
         "PORT": "5432",
     }
@@ -131,6 +131,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # ถ้าเป็น production จะเก็บ static ที่นี่
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")

@@ -4,7 +4,7 @@ from .views import (
     CourseDetailView, my_courses, register,
     add_lesson, edit_lesson, delete_lesson
 )
-from payment import views 
+from . import views 
 
 app_name = 'course'
 
@@ -19,5 +19,9 @@ urlpatterns = [
     path("lesson/<int:lesson_id>/edit/", edit_lesson, name="edit_lesson"),
     path("lesson/<int:lesson_id>/delete/", delete_lesson, name="delete_lesson"),
     path("list/", HomeView.as_view(), name="course_list"),
-    path("<int:course_id>/payment/", views.payment_checkout.as_view(), name="checkout"),  # เพิ่ม URL สำหรับหน้า Payment
+    path("delete/<int:course_id>/", views.delete_course_view, name="delete_course"),
+    path("instructor/dashboard/", views.instructor_dashboard_view, name="instructor_dashboard"),
+
+    # path("<int:course_id>/payment/", views.payment_checkout.as_view(), name="checkout"),  # เพิ่ม URL สำหรับหน้า Payment
+    
 ]

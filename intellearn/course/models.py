@@ -16,6 +16,7 @@ class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     thumbnail_url = models.URLField(blank=True, null=True)
+    thumbnail = models.ImageField(upload_to="courses/", blank=True, null=True)
     video_url = models.URLField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_lessons = models.PositiveIntegerField(default=0)

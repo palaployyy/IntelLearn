@@ -66,8 +66,8 @@
 
                     <!-- ✅ ปุ่มแก้ไข/ลบสำหรับ Instructor -->
                     {% if user == course.instructor or user.is_superuser %}
-                        <a href="{% url 'edit_lesson' lesson.id %}" class="btn btn-sm btn-warning me-2">✏ Edit</a>
-                        <a href="{% url 'delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑 Delete</a>
+                        <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-sm btn-warning me-2">✏️ Edit</a>
+                        <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
                     {% endif %}
                 </div>
             </li>

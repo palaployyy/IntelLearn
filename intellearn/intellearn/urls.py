@@ -22,6 +22,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from course.views import HomeView  # ใช้ในกรณีต้องการหน้าโฮมหลัก
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # Admin
@@ -45,3 +47,5 @@ urlpatterns = [
     # เส้นทางมาตรฐานของ Django Authentication (login/logout/reset password)
     # path("accounts/", include("django.contrib.auth.urls")),
 ]
+if settings.DEBUG:  # ป้องกัน error ตอน deploy
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

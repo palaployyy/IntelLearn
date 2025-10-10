@@ -83,4 +83,24 @@ def change_password_view(request):
 
 @login_required
 def profile_view(request):
-    return render(request, "authen/profile.html")
+    user = request.user
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        bio = request.POST.get("bio")
+
+        # อัปโหลดรูปโปรไฟล์ (ถ้ามี)
+        if 'profile_picture' in request.FILES:
+            user.profile_picture = request.FILES['profile_picture']
+
+        # อัปเดตข้อมูลอื่น ๆ
+        user.username = username
+        user.email = email
+        user.bio = bio
+        user.save()
+
+        messages.success(request, "✅ โปรไฟล์ของคุณถูกอัปเดตเรียบร้อยแล้ว!")
+        return redirect("authen:profile")
+
+    return render(request, "authen/profile.html", {"user": user})

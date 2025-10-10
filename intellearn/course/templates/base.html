@@ -12,13 +12,13 @@
 </head>
 <body>
     <!-- ✅ Navbar -->
-    <!-- ✅ Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'course:home' %}">Intellearn</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <!-- หน้าแรก -->
@@ -27,10 +27,22 @@
                            href="{% url 'course:home' %}">หน้าแรก</a>
                     </li>
 
-                    <!-- คอร์สของฉัน -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'course:my_courses' %}">คอร์สของฉัน</a>
-                    </li>
+                    <!-- คอร์สของฉัน (เฉพาะนักเรียน) -->
+                    {% if user.is_authenticated and user.role == 'student' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'course:my_courses' %}">คอร์สของฉัน</a>
+                        </li>
+                    {% endif %}
+
+                    <!-- ✅ Dashboard (เฉพาะ Instructor) -->
+                    {% if user.is_authenticated and user.groups.all.0.name == "instructor" %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'instructor_dashboard' %}active{% endif %}"
+                               href="{% url 'course:instructor_dashboard' %}">
+                               Dashboard
+                            </a>
+                        </li>
+                    {% endif %}
 
                     {% if user.is_authenticated %}
                         <!-- ✅ โปรไฟล์ -->
@@ -41,7 +53,7 @@
                             </a>
                         </li>
 
-                        <!-- ✅ Logout ใช้ form เพื่อป้องกัน CSRF -->
+                        <!-- ✅ Logout -->
                         <li class="nav-item">
                             <form action="{% url 'authen:logout' %}" method="post" class="d-inline">
                                 {% csrf_token %}
@@ -86,20 +98,28 @@
                     <h5 class="fw-bold">เมนูลัด</h5>
                     <ul class="list-unstyled">
                         <li><a href="{% url 'course:home' %}" class="text-white text-decoration-none">หน้าแรก</a></li>
-                        <li><a href="{% url 'course:my_courses' %}" class="text-white text-decoration-none">คอร์สของฉัน</a></li>
-                        <li><a href="{% url 'course:add_course' %}" class="text-white text-decoration-none">เพิ่มคอร์ส</a></li>
-                        <li><a href="{% url 'authen:register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
 
-                        {% if user.is_authenticated %}
-                        <li>
-                            <form action="{% url 'authen:logout' %}" method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-link nav-link text-white p-0 m-0">ออกจากระบบ</button>
-                            </form>
-                        </li>
+                        {% if user.is_authenticated and user.role == 'student' %}
+                            <li><a href="{% url 'course:my_courses' %}" class="text-white text-decoration-none">คอร์สของฉัน</a></li>
                         {% endif %}
 
-                        <li><a href="{% url 'dashboard:instructor_dashboard' %}" class="text-white text-decoration-none">Dashboard</a></li>
+                        {% if user.is_authenticated and user.groups.all.0.name == "instructor" %}
+                            <li><a href="{% url 'course:add_course' %}" class="text-white text-decoration-none">เพิ่มคอร์ส</a></li>
+                            <li><a href="{% url 'course:instructor_dashboard' %}" class="text-white text-decoration-none">Dashboard</a></li>
+                        {% endif %}
+
+                        {% if not user.is_authenticated %}
+                            <li><a href="{% url 'authen:register' %}" class="text-white text-decoration-none">สมัครสมาชิก</a></li>
+                        {% endif %}
+
+                        {% if user.is_authenticated %}
+                            <li>
+                                <form action="{% url 'authen:logout' %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link nav-link text-white p-0 m-0">ออกจากระบบ</button>
+                                </form>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
 
@@ -112,10 +132,7 @@
                 </div>
             </div>
 
-            <!-- เส้นคั่น -->
             <hr class="border-light">
-
-            <!-- Copyright -->
             <div class="text-center">
                 <p class="mb-0">© {% now "Y" %} Intellearn. All rights reserved.</p>
             </div>
