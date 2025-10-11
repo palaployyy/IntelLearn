@@ -55,7 +55,7 @@ def payment_checkout(request, course_id):
     else:
         form = PaymentForm(course=course)
 
-    return render(request, "payments/payment_form.html", {
+    return render(request, "payment_form.html", {
         "course": course,
         "form": form,
     })
