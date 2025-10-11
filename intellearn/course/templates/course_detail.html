@@ -3,86 +3,129 @@
 
 {% block content %}
 <div class="container py-5">
-    <!-- Course Header -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2 class="fw-bold">{{ course.title }}</h2>
-            <p class="text-muted">👨‍🏫 Instructor: {{ course.instructor.username }}</p>
+  <!-- Course Header -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h2 class="fw-bold">{{ course.title }}</h2>
+      <p class="text-muted">👨‍🏫 Instructor: {{ course.instructor.username }}</p>
 
-            {% if course.thumbnail_url %}
-                <img src="{{ course.thumbnail_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
-            {% endif %}
+      {% if course.thumbnail_url %}
+        <img src="{{ course.thumbnail_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
+      {% endif %}
 
-            <p>{{ course.description }}</p>
+      <p>{{ course.description }}</p>
 
-            <p class="fw-bold text-success">💲 ฿{{ course.price }}</p>
+      <p class="fw-bold text-success">💲 ฿{{ course.price }}</p>
 
-            <p>
-                📚 {{ lessons.count }} lessons <br>
-                👩‍🎓 {{ students_count }} students
-            </p>
+      <p>
+        📚 {{ lessons.count }} lessons <br>
+        👩‍🎓 {{ students_count }} students
+      </p>
 
-            <!-- ✅ ปุ่ม Enroll -->
-            {% if user.is_authenticated %}
-                {% if is_enrolled %}
-                    <button class="btn btn-secondary w-100 mb-3" disabled>
-                        ✅ Already Enrolled
-                    </button>
-                {% else %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success w-100 mb-3">
-                            📚 Enroll in this Course
-                        </button>
-                    </form>
-                {% endif %}
-            {% else %}
-                <a href="{% url 'login' %}" class="btn btn-primary w-100 mb-3">
-                    🔑 Login to Enroll
-                </a>
-            {% endif %}
-        </div>
-    </div>
+      <!-- การลงทะเบียน/ชำระเงิน -->
+      {% if user.is_authenticated %}
+        {% if is_enrolled %}
+          <button class="btn btn-secondary w-100 mb-3" disabled>
+            ✅ Already Enrolled
+          </button>
+        {% else %}
+          <!-- ยังไม่ลงทะเบียน: ให้ชำระเงินก่อน -->
+          <div class="d-grid gap-2">
+            <!-- Stripe (ทดสอบ) -->
+            <button id="payStripe" class="btn btn-success">
+              💳 ชำระด้วยบัตร (Stripe Test)
+            </button>
 
-    <hr>
-
-    <!-- Lessons List -->
-    <h4 class="mt-4">Course Lessons</h4>
-    <ul class="list-group">
-        {% for lesson in lessons %}
-            <li class="list-group-item d-flex justify-content-between align-items-start">
-                <div>
-                    <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
-                    {% if lesson.content %}
-                        <p class="mb-0 text-muted">{{ lesson.content|truncatewords:20 }}</p>
-                    {% endif %}
-                </div>
-                <div>
-                    {% if lesson.video_url %}
-                        <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
-                            ▶ Watch
-                        </a>
-                    {% endif %}
-
-                    <!-- ✅ ปุ่มแก้ไข/ลบสำหรับ Instructor -->
-                    {% if user == course.instructor or user.is_superuser %}
-                        <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-sm btn-warning me-2">✏️ Edit</a>
-                        <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
-                    {% endif %}
-                </div>
-            </li>
-        {% empty %}
-            <li class="list-group-item">No lessons available yet.</li>
-        {% endfor %}
-    </ul>
-
-    <!-- ✅ ปุ่มเพิ่ม Lesson -->
-    {% if user == course.instructor or user.is_superuser %}
-        <div class="mt-3">
-            <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-success">
-                ➕ Add Lesson
+            <!-- โอน/อัปโหลดสลิป (flow เดิม) -->
+            <a class="btn btn-outline-primary"
+               href="{% url 'payment:checkout' course.id %}">
+              🧾 ชำระแบบโอน/อัปโหลดสลิป
             </a>
+          </div>
+
+          <!-- ถ้าคุณยังอยากคงปุ่ม Enroll แบบเดิมไว้ (จะตรวจใน view ว่าจ่ายแล้วหรือยัง) -->
+          <form method="post" class="mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary w-100">
+              📚 Enroll (หลังชำระเงินแล้ว)
+            </button>
+          </form>
+        {% endif %}
+      {% else %}
+        <a href="/auth/login/" class="btn btn-primary w-100 mb-3">
+          🔑 Login to Enroll / Pay
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Lessons List -->
+  <h4 class="mt-4">Course Lessons</h4>
+  <ul class="list-group">
+    {% for lesson in lessons %}
+      <li class="list-group-item d-flex justify-content-between align-items-start">
+        <div>
+          <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
+          {% if lesson.content %}
+            <p class="mb-0 text-muted">{{ lesson.content|truncatewords:20 }}</p>
+          {% endif %}
         </div>
-    {% endif %}
+        <div>
+          {% if lesson.video_url %}
+            <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
+              ▶ Watch
+            </a>
+          {% endif %}
+
+          <!-- ปุ่มแก้ไข/ลบสำหรับ Instructor -->
+          {% if user == course.instructor or user.is_superuser %}
+            <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-sm btn-warning me-2">✏️ Edit</a>
+            <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
+          {% endif %}
+        </div>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No lessons available yet.</li>
+    {% endfor %}
+  </ul>
+
+  <!-- ปุ่มเพิ่ม Lesson -->
+  {% if user == course.instructor or user.is_superuser %}
+    <div class="mt-3">
+      <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-success">
+        ➕ Add Lesson
+      </a>
+    </div>
+  {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ใช้ CSRF จาก cookie
+  function getCookie(name){
+    const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+
+  const btnStripe = document.getElementById('payStripe');
+  btnStripe?.addEventListener('click', async () => {
+    try {
+      const resp = await fetch("{% url 'payment:create_checkout' course.id %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCookie('csrftoken')}
+      });
+      const data = await resp.json();
+      if (data.url) {
+        window.location.href = data.url; // ไปหน้า Stripe Checkout
+      } else {
+        alert('ไม่สามารถสร้าง Checkout Session ได้');
+      }
+    } catch (e) {
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Stripe');
+    }
+  });
+</script>
 {% endblock %}

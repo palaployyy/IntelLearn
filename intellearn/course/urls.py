@@ -1,27 +1,30 @@
 from django.urls import path
-from .views import (
-    HomeView, add_course, edit_course,
-    CourseDetailView, my_courses, register,
-    add_lesson, edit_lesson, delete_lesson
-)
-from . import views 
+from . import views
 
-app_name = 'course'
+app_name = "course"
 
 urlpatterns = [
-    path("", HomeView.as_view(), name="home"),
-    path("add/", add_course, name="add_course"),
-    path("<int:pk>/edit/", edit_course, name="edit_course"),  # ✅ ลบ "course/" ออก
-    path("<int:pk>/", CourseDetailView.as_view(), name="course_detail"),  # ✅ ถูกต้อง
-    path("my-courses/", my_courses, name="my_courses"),
-    path("register/", register, name="register"),
-    path("<int:course_id>/lesson/add/", add_lesson, name="add_lesson"),  # ✅ ลบ "course/" ออก
-    path("lesson/<int:lesson_id>/edit/", edit_lesson, name="edit_lesson"),
-    path("lesson/<int:lesson_id>/delete/", delete_lesson, name="delete_lesson"),
-    path("list/", HomeView.as_view(), name="course_list"),
+    # หน้าโฮม/ลิสต์คอร์ส
+    path("", views.HomeView.as_view(), name="home"),
+    path("list/", views.HomeView.as_view(), name="course_list"),
+
+    # จัดการคอร์ส
+    path("add/", views.add_course, name="add_course"),
+    path("<int:pk>/edit/", views.edit_course, name="edit_course"),
     path("delete/<int:course_id>/", views.delete_course_view, name="delete_course"),
+
+    # รายละเอียดคอร์ส + enroll (POST ใน CourseDetailView)
+    path("<int:pk>/", views.CourseDetailView.as_view(), name="course_detail"),
+
+    # บทเรียน
+    path("<int:course_id>/lesson/add/", views.add_lesson, name="add_lesson"),
+    path("lesson/<int:lesson_id>/edit/", views.edit_lesson, name="edit_lesson"),
+    path("lesson/<int:lesson_id>/delete/", views.delete_lesson, name="delete_lesson"),
+
+    # นักเรียน/ผู้สอน
+    path("my-courses/", views.my_courses, name="my_courses"),
     path("instructor/dashboard/", views.instructor_dashboard_view, name="instructor_dashboard"),
 
-    # path("<int:course_id>/payment/", views.payment_checkout.as_view(), name="checkout"),  # เพิ่ม URL สำหรับหน้า Payment
-    
+    # สมัครสมาชิก
+    path("register/", views.register, name="register"),
 ]

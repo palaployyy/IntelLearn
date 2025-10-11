@@ -1,32 +1,37 @@
-from django.shortcuts import render
-
-# Create your views here.
-# payments/views.py
+# payment/views.py
+from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.apps import apps
 
 from .forms import PaymentForm
 from .models import Payment
-from course.models import Course  # ปรับเส้นทาง import ให้ตรงโปรเจกต์คุณ
+from course.models import Course
+
 
 def _auto_enroll(student, course):
     """
     เปิดสิทธิ์เข้าเรียนอัตโนมัติหลังชำระเงินสำเร็จ
-    ปรับ app_label และ field ให้ตรงกับโมเดลของคุณถ้าไม่ใช่ 'course.Enrollment'
     """
     Enrollment = apps.get_model("course", "Enrollment")
-    obj, created = Enrollment.objects.get_or_create(
-        student=student, course=course,
-        defaults={"status": "active"}
+    obj, _ = Enrollment.objects.get_or_create(
+        student=student,
+        course=course,
+        defaults={"status": "active"},
     )
     return obj
 
+
 @login_required
 def payment_checkout(request, course_id):
+    """
+    หน้า Checkout (โอน/พร้อมเพย์/บัตรแบบ mock)
+    - บัตร (mock) => ชำระสำเร็จทันที, set paid + paid_at แล้ว enroll
+    - โอน/พร้อมเพย์ => pending + อัปโหลดสลิป รอแอดมินยืนยัน
+    """
     course = get_object_or_404(Course, id=course_id)
+
     if request.method == "POST":
         form = PaymentForm(request.POST, request.FILES, course=course)
         if form.is_valid():
@@ -35,45 +40,63 @@ def payment_checkout(request, course_id):
             payment.course = course
             payment.amount = getattr(course, "price", 0)
 
-            if payment.method == "credit_card":
-                # MOCK: ถือว่าชำระสำเร็จทันที
-                payment.status = "paid"
-                payment.confirmed_at = timezone.now()
+            if payment.method == Payment.METHOD_CARD:
+                # โหมด MOCK: ถือว่าชำระสำเร็จทันที
+                payment.status = Payment.STATUS_PAID
+                payment.paid_at = timezone.now()
             else:
-                # โอน/PromptPay → pending รอแอดมินกดอนุมัติ
-                payment.status = "pending"
+                # โอน/PromptPay → pending รอแอดมินตรวจสลิป
+                payment.status = Payment.STATUS_PENDING
 
             payment.save()
 
-            if payment.status == "paid":
+            if payment.is_paid:
                 _auto_enroll(request.user, course)
                 messages.success(request, "ชำระเงินสำเร็จ! ระบบได้เปิดสิทธิ์เข้าเรียนแล้ว")
-                return redirect("payments:success", payment_id=payment.id)
+            else:
+                messages.info(request, "ส่งคำขอชำระเงินแล้ว กรุณารอการตรวจสอบสลิป")
 
-            messages.info(request, "ส่งคำขอชำระเงินแล้ว กรุณารอการตรวจสอบสลิป")
-            return redirect("payments:success", payment_id=payment.id)
+            return redirect("payment:success", payment_id=payment.id)
     else:
         form = PaymentForm(course=course)
 
-    return render(request, "payment_form.html", {
-        "course": course,
-        "form": form,
-    })
+    return render(
+        request,
+        "payment/payment_form.html",
+        {
+            "course": course,
+            "form": form,
+        },
+    )
+
 
 @login_required
 def payment_success(request, payment_id):
+    """
+    หน้าแสดงสถานะการชำระเงินของรายการที่เพิ่งสร้าง
+    """
     payment = get_object_or_404(Payment, id=payment_id, student=request.user)
-    return render(request, "payments/payment_success.html", {"payment": payment})
+    return render(request, "payment/payment_success.html", {"payment": payment})
 
-# สำหรับแอดมินกดยืนยันสลิป
+
 @user_passes_test(lambda u: u.is_staff)
 def confirm_payment(request, payment_id):
+    """
+    สำหรับแอดมินกดยืนยันสลิป:
+    - เปลี่ยนสถานะเป็น paid
+    - ตั้งเวลาชำระ paid_at (ถ้ายังไม่มี)
+    - auto-enroll
+    """
     payment = get_object_or_404(Payment, id=payment_id)
-    payment.status = "paid"
-    payment.confirmed_at = timezone.now()
-    payment.save()
+    payment.status = Payment.STATUS_PAID
+    now = timezone.now()
+    payment.confirmed_at = now
+    if not payment.paid_at:
+        payment.paid_at = now
+    payment.save(update_fields=["status", "confirmed_at", "paid_at"])
+
     _auto_enroll(payment.student, payment.course)
-    messages.success(request, "ยืนยันการชำระเงินและเปิดสิทธิ์เรียบร้อย")
-    return redirect("admin:payments_payment_changelist")
+    messages.success(request, "ยืนยันการชำระเงินและเปิดสิทธิ์เรียนเรียบร้อย")
 
-
+    # กลับไปหน้า changelist ของโมเดล Payment ในแอดมิน
+    return redirect("admin:payment_payment_changelist")
