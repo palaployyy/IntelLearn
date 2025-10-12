@@ -22,39 +22,32 @@
         👩‍🎓 {{ students_count }} students
       </p>
 
-      <!-- การลงทะเบียน/ชำระเงิน -->
       {% if user.is_authenticated %}
-        {% if is_enrolled %}
-          <button class="btn btn-secondary w-100 mb-3" disabled>
-            ✅ Already Enrolled
+
+        <!-- ชำระด้วยบัตร (Stripe) : ใช้ form POST ปกติ แล้ว view จะ redirect ไป Stripe -->
+        <form method="post" action="{% url 'payment:create_checkout' course.id %}" class="mb-3">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success w-100">
+            💳 ชำระด้วยบัตร (Stripe Test)
           </button>
-        {% else %}
-          <!-- ยังไม่ลงทะเบียน: ให้ชำระเงินก่อน -->
-          <div class="d-grid gap-2">
-            <!-- Stripe (ทดสอบ) -->
-            <button id="payStripe" class="btn btn-success">
-              💳 ชำระด้วยบัตร (Stripe Test)
-            </button>
+        </form>
 
-            <!-- โอน/อัปโหลดสลิป (flow เดิม) -->
-            <a class="btn btn-outline-primary"
-               href="{% url 'payment:checkout' course.id %}">
-              🧾 ชำระแบบโอน/อัปโหลดสลิป
-            </a>
-          </div>
-
-          <!-- ถ้าคุณยังอยากคงปุ่ม Enroll แบบเดิมไว้ (จะตรวจใน view ว่าจ่ายแล้วหรือยัง) -->
-          <form method="post" class="mt-3">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-secondary w-100">
-              📚 Enroll (หลังชำระเงินแล้ว)
-            </button>
-          </form>
-        {% endif %}
-      {% else %}
-        <a href="/auth/login/" class="btn btn-primary w-100 mb-3">
-          🔑 Login to Enroll / Pay
+        <!-- ชำระแบบโอน/อัปโหลดสลิป -->
+        <a class="btn btn-outline-primary w-100 mb-3"
+           href="{% url 'payment:checkout' course.id %}">
+          🧾 ชำระแบบโอน/อัปโหลดสลิป
         </a>
+
+        <!-- Enroll (หลังชำระเงินแล้ว) -->
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-secondary w-100 mb-3">
+            📚 Enroll (หลังชำระเงินแล้ว)
+          </button>
+        </form>
+
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary w-100 mb-3">🔑 Login to Enroll</a>
       {% endif %}
     </div>
   </div>
@@ -79,7 +72,6 @@
             </a>
           {% endif %}
 
-          <!-- ปุ่มแก้ไข/ลบสำหรับ Instructor -->
           {% if user == course.instructor or user.is_superuser %}
             <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-sm btn-warning me-2">✏️ Edit</a>
             <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
@@ -91,7 +83,7 @@
     {% endfor %}
   </ul>
 
-  <!-- ปุ่มเพิ่ม Lesson -->
+  <!-- ปุ่มเพิ่ม Lesson สำหรับ Instructor -->
   {% if user == course.instructor or user.is_superuser %}
     <div class="mt-3">
       <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-success">
@@ -100,32 +92,4 @@
     </div>
   {% endif %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  // ใช้ CSRF จาก cookie
-  function getCookie(name){
-    const m = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
-    return m ? m.pop() : '';
-  }
-
-  const btnStripe = document.getElementById('payStripe');
-  btnStripe?.addEventListener('click', async () => {
-    try {
-      const resp = await fetch("{% url 'payment:create_checkout' course.id %}", {
-        method: 'POST',
-        headers: {'X-CSRFToken': getCookie('csrftoken')}
-      });
-      const data = await resp.json();
-      if (data.url) {
-        window.location.href = data.url; // ไปหน้า Stripe Checkout
-      } else {
-        alert('ไม่สามารถสร้าง Checkout Session ได้');
-      }
-    } catch (e) {
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Stripe');
-    }
-  });
-</script>
 {% endblock %}
