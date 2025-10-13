@@ -1,14 +1,15 @@
 from django.views.generic import ListView, DetailView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
 from django.http import HttpResponseForbidden
-from django.db.models import Q, Count, Sum
-from .models import Course, Enrollment, Lesson
-from .forms import CourseForm
-from .forms import RegisterForm
+from django.db.models import Q, Count
+from django.contrib import messages
 from django import forms
 from django.views import View
-from django.contrib import messages
+
+from .models import Course, Enrollment, Lesson
+from .forms import CourseForm, RegisterForm
 from payment.models import Payment
 
 
@@ -21,7 +22,7 @@ class HomeView(ListView):
     def get_queryset(self):
         queryset = Course.objects.annotate(
             lesson_count=Count("lessons"),
-            student_count=Count("enrollments")
+            student_count=Count("enrollments"),
         )
         search = self.request.GET.get("search")
         field = self.request.GET.get("field")
@@ -35,27 +36,23 @@ class HomeView(ListView):
                 queryset = queryset.filter(instructor__username__icontains=search)
             else:
                 queryset = queryset.filter(
-                    Q(title__icontains=search) |
-                    Q(description__icontains=search) |
-                    Q(instructor__username__icontains=search)
+                    Q(title__icontains=search)
+                    | Q(description__icontains=search)
+                    | Q(instructor__username__icontains=search)
                 )
         return queryset
 
 
 # ✅ Instructor: Add Course
 def add_course(request):
-    # ❌ ลบเช็ก login ออก
-    # ❌ ลบเช็ก is_staff ออก
-
     if request.method == "POST":
         form = CourseForm(request.POST)
         if form.is_valid():
             course = form.save(commit=False)
-            # ถ้าไม่มี instructor (เพราะ user ไม่ได้ login) → set เป็น None ได้
             if request.user.is_authenticated:
                 course.instructor = request.user
             else:
-                course.instructor = None  # ✅ ให้ใส่ NULL ได้ (ต้องแก้ model ให้ instructor = null=True ด้วย)
+                course.instructor = None  # ต้องตั้ง null=True ใน model
             course.save()
             return redirect("home")
     else:
@@ -63,12 +60,8 @@ def add_course(request):
     return render(request, "course_form.html", {"form": form, "title": "Add New Course"})
 
 
-
 def edit_course(request, pk):
     course = get_object_or_404(Course, pk=pk)
-
-    # ❌ ลบเช็ก login
-    # ❌ ลบเช็กว่าเป็น instructor หรือไม่
 
     if request.method == "POST":
         form = CourseForm(request.POST, instance=course)
@@ -78,9 +71,9 @@ def edit_course(request, pk):
     else:
         form = CourseForm(instance=course)
 
-    return render(request, "course_form.html", {"form": form, "title": f"Edit Course: {course.title}"})
-
-
+    return render(
+        request, "course_form.html", {"form": form, "title": f"Edit Course: {course.title}"}
+    )
 
 
 # ✅ Student: Course Detail (กดเข้าไปดู/Enroll ได้)
@@ -94,49 +87,62 @@ class CourseDetailView(DetailView):
         course = self.get_object()
         user = self.request.user
 
-        context["lessons"] = course.lessons.all()
+        # ข้อมูลพื้นฐาน
+        context["lessons"] = course.lessons.all().order_by("order", "id")
         context["students_count"] = course.enrollments.count()
+
+        # สถานะผู้ใช้กับคอร์ส
         context["is_enrolled"] = False
-        context["is_paid"] = False  # เพิ่มตัวแปรใหม่ตรวจสอบสถานะการชำระเงิน
+        context["is_paid"] = False
+        context["progress"] = None
 
         if user.is_authenticated:
             enrollment = Enrollment.objects.filter(student=user, course=course).first()
             if enrollment:
                 context["is_enrolled"] = True
+                # เตรียม progress ของผู้ใช้
+                progress, _ = LearningProgress.objects.get_or_create(enrollment=enrollment)
+                context["progress"] = progress
 
-                # ตรวจสอบว่ามีการชำระเงินแล้ว
-                payment = Payment.objects.filter(student=user, course=course, status="paid").first()
-                if payment:
-                    context["is_paid"] = True
+            # ตรวจสอบการชำระเงินสำเร็จแล้วหรือยัง
+            paid = Payment.objects.filter(
+                student=user, course=course, status="paid"
+            ).exists()
+            context["is_paid"] = paid
+
+        # ถ้าโปรเจกต์มี Quiz ที่ FK มาที่ Course แล้วตั้ง related_name="quizzes"
+        # ใน template จะใช้: course.quizzes.first --> ปุ่ม Quiz
         return context
 
     def post(self, request, *args, **kwargs):
-        """ ใช้ตอนกดปุ่ม Enroll """
+        """
+        กดปุ่ม Enroll:
+        - ต้อง login และต้องจ่ายเงินแล้ว
+        """
         course = self.get_object()
         user = request.user
 
         if not user.is_authenticated:
-            return redirect("login")
-        
-        # ตรวจสอบว่ามีการชำระเงินก่อนการลงทะเบียน
-        payment = Payment.objects.filter(student=user, course=course, status="paid").first()
-        if not payment:
+            return redirect("authen:login")
+
+        # ตรวจสอบการชำระเงิน
+        has_paid = Payment.objects.filter(
+            student=user, course=course, status="paid"
+        ).exists()
+        if not has_paid:
             messages.error(request, "กรุณาทำการชำระเงินก่อนลงทะเบียน")
-            return redirect("payment:checkout", course_id=course.id)  # ไปที่หน้าชำระเงิน
+            return redirect("payment:checkout", course_id=course.id)
 
-        # ถ้าชำระเงินแล้วลงทะเบียน
         Enrollment.objects.get_or_create(student=user, course=course)
+        messages.success(request, "ลงทะเบียนคอร์สเรียบร้อยแล้ว")
         return redirect("course:my_courses")
-
-
-
-
 
 # ✅ Student: My Courses (แสดงคอร์สที่ลงทะเบียนไว้)
 @login_required
 def my_courses(request):
     courses = Course.objects.filter(enrollments__student=request.user)
     return render(request, "my_courses.html", {"courses": courses})
+
 
 def register(request):
     if request.method == "POST":
@@ -155,11 +161,20 @@ class LessonForm(forms.ModelForm):
         model = Lesson
         fields = ["title", "content", "video_url", "order"]
         widgets = {
-            "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Lesson title"}),
-            "content": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Lesson content"}),
-            "video_url": forms.URLInput(attrs={"class": "form-control", "placeholder": "Video URL"}),
-            "order": forms.NumberInput(attrs={"class": "form-control", "placeholder": "Order"}),
+            "title": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Lesson title"}
+            ),
+            "content": forms.Textarea(
+                attrs={"class": "form-control", "rows": 4, "placeholder": "Lesson content"}
+            ),
+            "video_url": forms.URLInput(
+                attrs={"class": "form-control", "placeholder": "Video URL"}
+            ),
+            "order": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "Order"}
+            ),
         }
+
 
 # ✅ เพิ่มบทเรียน
 def add_lesson(request, course_id):
@@ -171,11 +186,14 @@ def add_lesson(request, course_id):
             lesson = form.save(commit=False)
             lesson.course = course
             lesson.save()
-            return redirect("course_detail", pk=course.id)
+            # 👉 ต้องใส่ namespace 'course:' ให้ตรงกับ include(...)
+            return redirect("course:course_detail", pk=course.id)
     else:
         form = LessonForm()
 
-    return render(request, "lesson_form.html", {"form": form, "title": f"Add Lesson to {course.title}"})
+    return render(
+        request, "lesson_form.html", {"form": form, "title": f"Add Lesson to {course.title}"}
+    )
 
 
 # ✅ แก้ไขบทเรียน
@@ -186,11 +204,13 @@ def edit_lesson(request, lesson_id):
         form = LessonForm(request.POST, instance=lesson)
         if form.is_valid():
             form.save()
-            return redirect("course_detail", pk=lesson.course.id)
+            return redirect("course:course_detail", pk=lesson.course.id)
     else:
         form = LessonForm(instance=lesson)
 
-    return render(request, "lesson_form.html", {"form": form, "title": f"Edit Lesson: {lesson.title}"})
+    return render(
+        request, "lesson_form.html", {"form": form, "title": f"Edit Lesson: {lesson.title}"}
+    )
 
 
 # ✅ ลบบทเรียน
@@ -198,11 +218,11 @@ def delete_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     course_id = lesson.course.id
     lesson.delete()
-    return redirect("course_detail", pk=course_id)
+    return redirect("course:course_detail", pk=course_id)
+
 
 @login_required
 def delete_course_view(request, course_id):
-    # ✅ ป้องกันกรณี id ไม่เจอ
     course = get_object_or_404(Course, id=course_id)
 
     # ✅ ตรวจสอบสิทธิ์
@@ -216,6 +236,7 @@ def delete_course_view(request, course_id):
         return redirect("course:home")
 
     return render(request, "confirm_delete.html", {"course": course})
+
 
 @login_required
 def instructor_dashboard_view(request):
@@ -234,13 +255,15 @@ def instructor_dashboard_view(request):
         active = enrollments.filter(status="active").count()
         dropped = enrollments.filter(status="dropped").count()
 
-        course_data.append({
-            "course": course,
-            "total_students": total_students,
-            "completed": completed,
-            "active": active,
-            "dropped": dropped,
-        })
+        course_data.append(
+            {
+                "course": course,
+                "total_students": total_students,
+                "completed": completed,
+                "active": active,
+                "dropped": dropped,
+            }
+        )
 
     # ✅ สถิติรวม
     total_courses = courses.count()
@@ -256,6 +279,8 @@ def instructor_dashboard_view(request):
 
     return render(request, "instructor_dashboard.html", context)
 
+
+# (ถ้ายังต้องใช้ view นี้อยู่)
 class PaymentView(View):
     def get(self, request, course_id):
         course = Course.objects.get(id=course_id)

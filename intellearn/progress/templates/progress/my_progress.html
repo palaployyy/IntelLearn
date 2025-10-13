@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-3">ความคืบหน้าการเรียนของฉัน</h3>
+<table class="table">
+  <thead><tr><th>คอร์ส</th><th class="text-end">คืบหน้า</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.course.title }}</td>
+        <td class="text-end">{{ r.done }}/{{ r.total }} ({{ r.pct }}%)</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="2">ยังไม่มีการลงทะเบียนคอร์ส</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

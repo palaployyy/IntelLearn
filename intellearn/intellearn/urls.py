@@ -59,6 +59,9 @@ urlpatterns = [
 
     # (ออปชัน) เส้นทางของ Quiz ถ้ามีใช้งานหน้า take/submit
     path("quiz/", include(("quiz.urls", "quiz"), namespace="quiz")),
+
+    path("progress/", include(("progress.urls", "progress"), namespace="progress")),
+
 ]
 
 # ให้ Django เสิร์ฟไฟล์สื่อ (MEDIA) ระหว่างพัฒนา

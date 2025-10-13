@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}ผลการทำแบบทดสอบ{% endblock %}
+
+{% block content %}
+<h1 class="h4">ผลการทำแบบทดสอบ</h1>
+<p>ได้คะแนน: <strong>{{ score }}</strong> / {{ total }}</p>
+<p>ผล: {% if passed %}<span class="text-success">ผ่าน</span>{% else %}<span class="text-danger">ไม่ผ่าน</span>{% endif %}</p>
+
+<a class="btn btn-secondary" href="{% url 'course:course_detail' quiz.course.id %}">กลับไปหน้าคอร์ส</a>
+{% endblock %}

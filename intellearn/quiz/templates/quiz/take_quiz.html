@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}แบบทดสอบ · {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<h1 class="h3">{{ quiz.title }}</h1>
+<p class="text-muted">
+  คอร์ส: {{ quiz.course.title }} · คะแนนผ่าน: {{ quiz.pass_score }}
+</p>
+
+<form method="post" action="{% url 'quiz:submit' quiz.id %}" class="card p-3">
+  {% csrf_token %}
+
+  {% for q in questions %}
+    <div class="mb-3">
+      <div class="fw-semibold mb-2">
+        {{ forloop.counter }}. {{ q.text }} ({{ q.points }} คะแนน)
+      </div>
+
+      {% for a in q.answers.all %}
+        <label class="d-block mb-1">
+          <input type="radio" name="q-{{ q.id }}" value="{{ a.id }}"> {{ a.text }}
+        </label>
+      {% endfor %}
+    </div>
+    <hr>
+  {% empty %}
+    <p class="text-muted">ยังไม่มีคำถาม</p>
+  {% endfor %}
+
+  <button class="btn btn-primary" type="submit">ส่งคำตอบ</button>
+</form>
+{% endblock %}
