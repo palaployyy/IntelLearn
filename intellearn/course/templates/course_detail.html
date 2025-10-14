@@ -3,122 +3,115 @@
 
 {% block content %}
 <div class="container py-5">
-  <!-- Header -->
+
+  <!-- ===== Header ===== -->
   <div class="row mb-4">
-    <div class="col-md-8">
-      <h2 class="fw-bold">{{ course.title }}</h2>
-      <p class="text-muted">👨‍🏫 Instructor: {{ course.instructor.username }}</p>
+    <div class="col-lg-9">
+      <h2 class="fw-bold mb-1">{{ course.title }}</h2>
+      <p class="text-muted mb-3">👨‍🏫 Instructor: {{ course.instructor.username }}</p>
 
       {% if course.thumbnail_url %}
         <img src="{{ course.thumbnail_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
       {% endif %}
 
-      <p>{{ course.description }}</p>
+      <p class="mb-2">{{ course.description }}</p>
 
-      <div class="d-flex align-items-center gap-3 mb-2">
-        <span class="fw-bold text-success">💲 ฿{{ course.price }}</span>
-        <span>📚 {{ lessons.count }} lessons</span>
-        <span>👩‍🎓 {{ students_count }} students</span>
+      <p class="fw-bold text-success h5 mb-0">💲 ฿{{ course.price }}</p>
+
+      <div class="text-muted mt-2">
+        📚 {{ lessons.count }} lessons • 👩‍🎓 {{ students_count }} students
       </div>
 
-      {% if user.is_authenticated %}
-
-        <!-- ชำระด้วยบัตร (Stripe)
-        <form method="post" action="{% url 'payment:create_checkout' course.id %}" class="mb-2">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-success w-100">
-            💳 ชำระด้วยบัตร (Stripe Test)
-          </button>
-        </form> -->
-
-        <!-- ชำระแบบโอน/อัปโหลดสลิป (mock) -->
-        <a class="btn btn-outline-primary w-100 mb-3" href="{% url 'payment:checkout' course.id %}">
-          🧾 ชำระแบบโอน/อัปโหลดสลิป
-        </a>
-
-        <!-- Enroll (หลังชำระเงินแล้ว) -->
-        <form method="post" class="mb-3">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-secondary w-100"
-            {% if is_enrolled or not is_paid %}disabled{% endif %}>
-            📚 Enroll (หลังชำระเงินแล้ว)
-          </button>
-          {% if is_enrolled %}
-            <div class="text-success small mt-1">คุณลงทะเบียนคอร์สนี้แล้ว</div>
-          {% elif not is_paid %}
-            <div class="text-muted small mt-1">* ต้องชำระเงินก่อนจึงจะลงทะเบียนได้</div>
-          {% endif %}
-        </form>
-
-        {% if progress %}
-          <div class="mb-3">
-            <div class="d-flex justify-content-between">
-              <span class="text-muted">ความคืบหน้า</span>
-              <span class="fw-semibold">{{ progress.percentage }}%</span>
-            </div>
-            <div class="progress" style="height:12px;">
-              <div class="progress-bar bg-success" style="width: {{ progress.percentage }}%;"></div>
-            </div>
-          </div>
+      <!-- ===== Payment / Enroll =====
+           โชว์ปุ่มชำระเงินเฉพาะ "ล็อกอินแล้ว" และ "ยังไม่มี enrollment"
+      -->
+      <div class="mt-3">
+        {% if user.is_authenticated and not enrollment %}
+          <form method="post" action="{% url 'payment:create_checkout' course.id %}" class="mb-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success w-100">
+              💳 ชำระด้วยบัตร (Stripe Test)
+            </button>
+          </form>
         {% endif %}
+        {% if not user.is_authenticated %}
+          <a href="{% url 'authen:login' %}" class="btn btn-primary w-100">🔑 Login to purchase</a>
+        {% endif %}
+      </div>
 
-      {% else %}
-        <a href="{% url 'authen:login' %}" class="btn btn-primary w-100 mb-3">🔑 Login to Enroll</a>
-      {% endif %}
+      <!-- ===== Progress Bar ===== -->
+      <div class="mt-4">
+        <div class="progress" style="height: 12px;">
+          <div
+            class="progress-bar bg-success"
+            role="progressbar"
+            style="width: {{ pct }}%;"
+            aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+          </div>
+        </div>
+        <div class="d-flex justify-content-between mt-1">
+          <span class="text-muted small">ความคืบหน้า</span>
+          <span class="fw-semibold">{{ pct }}%</span>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <hr>
 
-  <!-- Lessons -->
+  <!-- ===== Lessons List ===== -->
   <h4 class="mt-4">Course Lessons</h4>
+
   <ul class="list-group">
     {% for lesson in lessons %}
       <li class="list-group-item d-flex justify-content-between align-items-start">
+        <!-- Left: title/desc -->
         <div class="me-3">
           <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
           {% if lesson.content %}
-            <p class="mb-0 text-muted">{{ lesson.content|truncatewords:20 }}</p>
+            <p class="mb-0 text-muted">{{ lesson.content|truncatewords:25 }}</p>
           {% endif %}
         </div>
 
+        <!-- Right: actions -->
         <div class="d-flex align-items-center gap-2">
 
+          <!-- ดูวิดีโอ -->
           {% if lesson.video_url %}
-            <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+            <a href="{{ lesson.video_url }}" target="_blank"
+               class="btn btn-sm btn-outline-primary">
               ▶ Watch
             </a>
           {% endif %}
 
-          {# ปุ่ม Quiz ของบทเรียน/คอร์ส (ถ้ามี Quiz แรก) #}
+          <!-- ปุ่ม Quiz (ถ้าคอร์สมี quiz) -->
           {% with first_quiz=course.quizzes.first %}
             {% if first_quiz %}
               <button type="button"
                       class="btn btn-sm btn-outline-success"
                       onclick="window.location.href='{% url 'quiz:take' first_quiz.id %}'">
-                🧪 Quiz
+                📝 Quiz
               </button>
-            {% else %}
-              <button class="btn btn-sm btn-outline-secondary" disabled>🧪 Quiz</button>
             {% endif %}
           {% endwith %}
 
-          {# ปุ่มบันทึกความคืบหน้า (เสร็จ/ยกเลิก) เฉพาะผู้เรียนที่ลงทะเบียน #}
-          {% if user.is_authenticated and is_enrolled and progress %}
-            {% if lesson in progress.completed_lessons.all %}
+          <!-- ทำเสร็จ / ยกเลิกทำเสร็จ (เฉพาะผู้ที่มี enrollment) -->
+          {% if user.is_authenticated and enrollment %}
+            {% if lesson.id in completed_ids %}
               <form method="post" action="{% url 'progress:unmark_done' lesson.id %}">
                 {% csrf_token %}
-                <button class="btn btn-sm btn-success" title="ทำเสร็จแล้ว">✓ Done</button>
+                <button class="btn btn-sm btn-success">✓ ทำเสร็จ</button>
               </form>
             {% else %}
               <form method="post" action="{% url 'progress:mark_done' lesson.id %}">
                 {% csrf_token %}
-                <button class="btn btn-sm btn-outline-success" title="บันทึกว่าเรียนเสร็จ">เสร็จ</button>
+                <button class="btn btn-sm btn-outline-success">ทำเสร็จ</button>
               </form>
             {% endif %}
           {% endif %}
 
-          {# สิทธิ์อาจารย์ #}
+          <!-- ปุ่มแก้ไข/ลบสำหรับ Instructor -->
           {% if user == course.instructor or user.is_superuser %}
             <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-sm btn-warning">✏️ Edit</a>
             <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
@@ -130,6 +123,7 @@
     {% endfor %}
   </ul>
 
+  <!-- ปุ่มเพิ่ม Lesson สำหรับ Instructor -->
   {% if user == course.instructor or user.is_superuser %}
     <div class="mt-3">
       <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-success">
@@ -137,5 +131,6 @@
       </a>
     </div>
   {% endif %}
+
 </div>
 {% endblock %}

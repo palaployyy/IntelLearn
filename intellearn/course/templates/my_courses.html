@@ -1,26 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="fw-bold mb-4">📚 My Courses</h2>
+<div class="container py-4">
+  <h3 class="mb-3">คอร์สของฉัน</h3>
 
-  <div class="row">
-    {% for course in courses %}
-      <div class="col-md-4">
-        <div class="card mb-4 shadow-sm h-100">
-          {% if course.thumbnail_url %}
-            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}">
-          {% endif %}
-          <div class="card-body">
-            <h5 class="card-title">{{ course.title }}</h5>
-            <p class="card-text">{{ course.description|truncatewords:15 }}</p>
-            <a href="{% url 'course:course_detail' course.id %}" class="btn btn-primary btn-sm">Go to Course</a>
+  {% if rows %}
+    <div class="list-group">
+      {% for r in rows %}
+        <a href="{% url 'course:course_detail' r.course.id %}" class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ r.course.title }}</h5>
+            <small class="text-muted">{{ r.pct }}%</small>
           </div>
-        </div>
-      </div>
-    {% empty %}
-      <p>คุณยังไม่ได้ลงทะเบียนคอร์สใด ๆ</p>
-    {% endfor %}
-  </div>
+          <p class="mb-1 text-muted">{{ r.course.description|truncatewords:20 }}</p>
+
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:10px;">
+              <div class="progress-bar bg-success" style="width: {{ r.pct }}%;"></div>
+            </div>
+            <small class="text-muted">{{ r.done }}/{{ r.total }}</small>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">ยังไม่มีคอร์สที่ลงทะเบียน</div>
+  {% endif %}
 </div>
 {% endblock %}
