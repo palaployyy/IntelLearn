@@ -91,7 +91,7 @@ hr {
 
 <div class="container py-5">
   <div class="profile-card mx-auto" style="max-width: 700px;">
-    <!-- Header -->
+   
     <div class="d-flex align-items-center mb-4">
       {% if user.profile_picture %}
         <img src="{{ user.profile_picture.url }}" alt="Profile" class="profile-avatar me-3" width="100" height="100">
@@ -107,16 +107,8 @@ hr {
 
     <hr>
 
-    <!-- ✅ Alerts -->
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }} mb-3">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
 
-    <!-- ✅ Profile Form -->
+    
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="mb-3">
@@ -146,7 +138,6 @@ hr {
 
     <hr class="my-4">
 
-    <!-- Buttons -->
     <div class="d-flex gap-2">
       <a href="{% url 'authen:change_password' %}" class="btn btn-warning flex-fill">
         🔒 เปลี่ยนรหัสผ่าน

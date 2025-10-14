@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width: 600px;">
+  <div class="card shadow p-4 text-center">
+    <h3 class="mb-3 text-danger">⚠️ ยืนยันการลบคำถาม</h3>
+    <p>คุณแน่ใจหรือไม่ว่าต้องการลบคำถามนี้จากควิซ <strong>{{ quiz.title }}</strong>?</p>
+    <p class="text-muted">"{{ question.text|truncatewords:15 }}"</p>
+
+    <form method="post" class="mt-4">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger px-4">🗑️ ลบคำถาม</button>
+      <a href="{% url 'quiz:edit_quiz' quiz.id %}" class="btn btn-secondary px-4">ยกเลิก</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

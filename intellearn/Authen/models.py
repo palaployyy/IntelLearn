@@ -11,7 +11,7 @@ class User(AbstractUser):
     bio = models.TextField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
 
-    # ✅ ตั้งชื่อ related_name ใหม่ เพื่อไม่ให้ชนกับ auth.User
+    # ตั้งชื่อ related_name ใหม่ เพื่อไม่ให้ชนกับ auth.User
     groups = models.ManyToManyField(
         Group,
         related_name="custom_user_set",  # เปลี่ยนชื่อ
