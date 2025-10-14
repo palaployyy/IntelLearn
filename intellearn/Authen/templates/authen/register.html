@@ -9,16 +9,6 @@
         <h3 class="fw-bold text-center mb-1">สมัครสมาชิก</h3>
         <p class="text-muted text-center mb-4">สร้างบัญชีเพื่อเริ่มเรียนกับ Intellearn</p>
 
-        {# แสดงข้อความจาก Django messages #}
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-
         <form method="post" novalidate>
           {% csrf_token %}
 

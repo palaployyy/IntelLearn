@@ -67,7 +67,7 @@
   background: #0056b3;
 }
 
-/* 🌟 Why Choose Us (Classic style) */
+/* 🌟 Why Choose Us */
 .why-section {
   background-color: #f8f9fa;
   padding: 60px 0;
@@ -131,7 +131,7 @@
   <a href="#courses" class="btn btn-light btn-lg px-4 mt-3 fw-bold">Explore Courses</a>
 </section>
 
-<!-- Featured Courses -->
+<!-- 🎓 Featured Courses -->
 <div class="container" id="courses">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold mb-0">🎓 Featured Courses</h2>
@@ -158,7 +158,8 @@
 
           <div class="mt-auto d-flex gap-2">
             {% if user.is_authenticated %}
-              {% if user.groups.all.0.name == "instructor" %}
+              {% if user.groups.all.0.name == "instructor" and course.instructor == user %}
+                <!-- ✅ Instructor เห็นเฉพาะของตัวเอง -->
                 <a href="{% url 'course:edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">✏️ Edit</a>
                 <form method="post" action="{% url 'course:delete_course' course.id %}" class="flex-fill">
                   {% csrf_token %}
@@ -180,7 +181,7 @@
   </div>
 </div>
 
-<!-- 💡 Why Choose Intellearn (Classic) -->
+<!-- 💡 Why Choose Intellearn -->
 <section class="why-section mt-5">
   <div class="container">
     <h2 class="fw-bold text-center mb-5">Why Choose Intellearn</h2>

@@ -21,7 +21,7 @@
   color: #aaf0c4;
 }
 
-/* ===== Lessons ===== */
+/* ===== Card Section ===== */
 .lesson-card {
   background: #fff;
   border-radius: 10px;
@@ -46,11 +46,6 @@
   font-size: 0.9rem;
 }
 
-.lesson-actions .btn {
-  font-size: 0.85rem;
-  padding: 4px 10px;
-}
-
 /* ===== Progress Bar ===== */
 .progress {
   height: 12px;
@@ -63,24 +58,38 @@
   transition: width 0.6s ease;
 }
 
-/* ===== Alerts ===== */
-.alert-warning {
-  background: #fff3cd;
-  border: none;
-  border-left: 6px solid #ffc107;
-  border-radius: 10px;
-  color: #856404;
+/* ===== Buttons ===== */
+.btn-add {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 10px 18px;
 }
 
-/* ===== Add Lesson Button ===== */
 .btn-add-lesson {
   background: #198754;
   color: white;
-  border-radius: 8px;
 }
 
 .btn-add-lesson:hover {
   background: #157347;
+}
+
+.btn-add-quiz {
+  background: #ffc107;
+  color: black;
+}
+
+.btn-add-quiz:hover {
+  background: #e0a800;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #bb2d3b;
 }
 </style>
 
@@ -134,14 +143,13 @@
     {% endif %}
   </div>
 
-  <!-- ===== Lessons List ===== -->
+  <!-- ===== Lessons Section ===== -->
   <div>
     <h4 class="fw-bold mb-3">📘 Course Lessons</h4>
 
     {% if is_paid or user == course.instructor or user.is_superuser %}
       {% for lesson in lessons %}
         <div class="lesson-card d-flex justify-content-between align-items-start">
-          <!-- Left -->
           <div>
             <div class="lesson-title">{{ lesson.order }}. {{ lesson.title }}</div>
             {% if lesson.content %}
@@ -149,23 +157,12 @@
             {% endif %}
           </div>
 
-          <!-- Right -->
-          <div class="lesson-actions d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2">
             {% if lesson.video_url %}
               <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
                 ▶ Watch
               </a>
             {% endif %}
-
-            {% with first_quiz=course.quizzes.first %}
-              {% if first_quiz %}
-                <button type="button"
-                        class="btn btn-outline-success btn-sm"
-                        onclick="window.location.href='{% url 'quiz:take' first_quiz.id %}'">
-                  📝 Quiz
-                </button>
-              {% endif %}
-            {% endwith %}
 
             {% if user.is_authenticated and enrollment %}
               {% if lesson.id in completed_ids %}
@@ -197,11 +194,47 @@
     {% endif %}
   </div>
 
-  <!-- Add Lesson (Instructor Only) -->
+  <!-- ===== Quiz Section ===== -->
+  <div class="mt-5">
+    <h4 class="fw-bold mb-3">🧠 Course Quizzes</h4>
+
+    {% for quiz in course.quizzes.all %}
+      <div class="lesson-card mb-3 p-3">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="fw-semibold mb-1">{{ quiz.title }}</h5>
+            <p class="text-muted mb-1">{{ quiz.description|default:"ไม่มีคำอธิบาย" }}</p>
+            <p class="text-muted small mb-0">
+              📄 {{ quiz.questions.count }} คำถาม • เกณฑ์ผ่าน: {{ quiz.pass_score }}%
+            </p>
+          </div>
+
+          <div class="d-flex gap-2">
+            {% if user == course.instructor or user.is_superuser %}
+              <a href="{% url 'quiz:edit_quiz' quiz.id %}" class="btn btn-warning btn-sm">✏️ Edit</a>
+              <a href="{% url 'quiz:add_question' quiz.id %}" class="btn btn-success btn-sm">➕ Add Question</a>
+              <a href="{% url 'quiz:delete_quiz' quiz.id %}" class="btn btn-danger btn-sm"
+                 onclick="return confirm('แน่ใจหรือไม่ว่าต้องการลบควิซนี้?');">🗑️ Delete</a>
+            {% endif %}
+            {% if user.is_authenticated and is_paid or user == course.instructor or user.is_superuser %}
+              <a href="{% url 'quiz:take' quiz.id %}" class="btn btn-outline-primary btn-sm">🧾 Take Quiz</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-muted">ยังไม่มีควิซสำหรับคอร์สนี้</p>
+    {% endfor %}
+  </div>
+
+  <!-- ===== Add Lesson / Quiz Buttons ===== -->
   {% if user == course.instructor or user.is_superuser %}
-    <div class="text-center mt-4">
-      <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-add-lesson px-4 py-2 fw-semibold">
-        ➕ Add New Lesson
+    <div class="d-flex justify-content-center gap-3 mt-4">
+      <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-add btn-add-lesson">
+        ➕ Add Lesson
+      </a>
+      <a href="{% url 'quiz:add_quiz' course.id %}" class="btn btn-add btn-add-quiz">
+        🧠 Add Quiz
       </a>
     </div>
   {% endif %}
