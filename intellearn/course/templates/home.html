@@ -122,22 +122,28 @@
 
             <div class="mt-auto d-flex gap-2">
               {# ครู/สตาฟ/แอดมิน: Edit/Delete + View #}
-              {% if user.is_authenticated and (user.is_superuser or user.is_staff or user.groups.all.0.name == "instructor") %}
-                <a href="{% url 'course:edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">
-                  <i class="bi bi-pencil-square me-1"></i> Edit
-                </a>
-                <form method="post" action="{% url 'course:delete_course' course.id %}" class="flex-fill">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-danger btn-sm w-100"
-                          onclick="return confirm('Delete this course?');">
-                    <i class="bi bi-trash me-1"></i> Delete
-                  </button>
-                </form>
-                <a href="{% url 'course:course_detail' course.id %}" class="btn btn-custom btn-sm flex-fill">
-                  <i class="bi bi-book me-1"></i> View
-                </a>
+              {% if user.is_authenticated %}
+                {% if user.is_superuser or user.is_staff or user.groups.all.0.name == "instructor" %}
+                  <a href="{% url 'course:edit_course' course.id %}" class="btn btn-warning btn-sm flex-fill">
+                    <i class="bi bi-pencil-square me-1"></i> Edit
+                  </a>
+                  <form method="post" action="{% url 'course:delete_course' course.id %}" class="flex-fill">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm w-100"
+                            onclick="return confirm('Delete this course?');">
+                      <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                  </form>
+                  <a href="{% url 'course:course_detail' course.id %}" class="btn btn-custom btn-sm flex-fill">
+                    <i class="bi bi-book me-1"></i> View
+                  </a>
+                {% else %}
+                  {# นักเรียน/ผู้ใช้ทั่วไป: แสดงเฉพาะ View #}
+                  <a href="{% url 'course:course_detail' course.id %}" class="btn btn-custom btn-sm w-100">
+                    <i class="bi bi-book me-1"></i> View
+                  </a>
+                {% endif %}
               {% else %}
-              {# นักเรียน/ผู้ใช้ทั่วไป: แสดงเฉพาะ View #}
                 <a href="{% url 'course:course_detail' course.id %}" class="btn btn-custom btn-sm w-100">
                   <i class="bi bi-book me-1"></i> View
                 </a>
@@ -150,8 +156,10 @@
       <div class="col-12">
         <div class="alert alert-light border text-center">
           No courses available.
-          {% if user.is_authenticated and (user.is_superuser or user.is_staff or user.groups.all.0.name == "instructor") %}
-            <a href="{% url 'course:add_course' %}" class="alert-link ms-1">Add the first course</a>
+          {% if user.is_authenticated %}
+            {% if user.is_superuser or user.is_staff or user.groups.all.0.name == "instructor" %}
+              <a href="{% url 'course:add_course' %}" class="alert-link ms-1">Add the first course</a>
+            {% endif %}
           {% endif %}
         </div>
       </div>

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width: 800px;">
+  <h3 class="fw-bold mb-4">✏️ Edit Quiz: {{ quiz.title }}</h3>
+
+  <form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">ชื่อแบบทดสอบ</label>
+      {{ form.title }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">คำอธิบายแบบทดสอบ</label>
+      {{ form.description }}
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">จำนวนคำถามทั้งหมด</label>
+        {{ form.total_questions }}
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label fw-semibold">เกณฑ์ผ่าน (%)</label>
+        {{ form.pass_score }}
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-3">
+      <a href="{% url 'course:course_detail' quiz.course.id %}" class="btn btn-outline-secondary">
+        ⬅ กลับไปหน้าคอร์ส
+      </a>
+      <button type="submit" class="btn btn-success fw-semibold">
+        💾 บันทึกการแก้ไข
+      </button>
+    </div>
+  </form>
+
+  <hr class="my-4">
+
+  <h5 class="fw-semibold mb-3">🧩 คำถามในแบบทดสอบนี้</h5>
+
+  {% for question in quiz.questions.all %}
+    <div class="border rounded p-3 mb-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ forloop.counter }}.</strong> {{ question.text }}
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'quiz:edit_question' question.id %}" class="btn btn-warning btn-sm">✏️ Edit</a>
+          <a href="{% url 'quiz:delete_question' question.id %}" class="btn btn-danger btn-sm"
+             onclick="return confirm('แน่ใจหรือไม่ว่าต้องการลบคำถามนี้?');">🗑️ Delete</a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-muted">ยังไม่มีคำถามในควิซนี้</p>
+  {% endfor %}
+
+  <div class="text-center mt-4">
+    <a href="{% url 'quiz:add_question' quiz.id %}" class="btn btn-success">
+      ➕ เพิ่มคำถามใหม่
+    </a>
+  </div>
+</div>
+{% endblock %}

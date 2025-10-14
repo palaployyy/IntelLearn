@@ -1,3 +1,38 @@
+# from django.contrib.auth.decorators import login_required
+# from django.shortcuts import get_object_or_404, render, redirect
+# from django.contrib import messages
+# from .models import Quiz, Submission
+# from .services import grade_submission
+# from course.models import Enrollment
+
+# @login_required
+# def take_quiz(request, quiz_id):
+#     quiz = get_object_or_404(Quiz.objects.select_related("course"), id=quiz_id)
+
+#     # อนุญาตเฉพาะผู้ลงทะเบียนคอร์ส
+#     enrolled = Enrollment.objects.filter(student=request.user, course=quiz.course).exists()
+#     if not enrolled:
+#         messages.error(request, "คุณต้องลงทะเบียนคอร์สก่อนจึงจะทำแบบทดสอบได้")
+#         return redirect("/courses/")
+
+#     questions = quiz.questions.prefetch_related("answers").all()
+#     return render(request, "quiz/take_quiz.html", {"quiz": quiz, "questions": questions})
+
+# @login_required
+# def submit_quiz(request, quiz_id):
+#     if request.method != "POST":
+#         return redirect("quiz:take", quiz_id=quiz_id)
+
+#     quiz = get_object_or_404(Quiz, id=quiz_id)
+
+#     # สร้าง/ดึง submission (1 คน/quiz 1 รายการ)
+#     submission, _ = Submission.objects.get_or_create(student=request.user, quiz=quiz)
+#     # เก็บคำตอบจาก form: name="q-<id>" value="<answer_id>"
+#     answers_map = {k.split("-")[1]: v for k, v in request.POST.items() if k.startswith("q-")}
+#     grade_submission(submission=submission, answers_map=answers_map)
+
+#     return render(request, "quiz/result.html", {"quiz": quiz, "submission": submission})
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -67,12 +102,23 @@ def edit_quiz(request, quiz_id):
         form = QuizForm(request.POST, instance=quiz)
         if form.is_valid():
             form.save()
-            messages.success(request, "✏️ แก้ไขควิซเรียบร้อยแล้ว")
-            return redirect("course:course_detail", pk=quiz.course.id)
+            messages.success(request, "✅ บันทึกควิซเรียบร้อยแล้ว")
+            return redirect("course:course_detail", quiz.course.id)
     else:
         form = QuizForm(instance=quiz)
 
-    return render(request, "quiz/quiz_form.html", {"form": form, "title": f"Edit Quiz: {quiz.title}"})
+    # 💡 จุดสำคัญคือส่ง quiz เข้า context ด้วย
+    return render(
+        request,
+        "quiz/edit_quiz.html",
+        {
+            "form": form,
+            "quiz": quiz,   # ✅ ต้องมี
+            "title": f"Edit Quiz: {quiz.title}",
+        },
+    )
+
+
 
 
 # -------------------------
@@ -81,7 +127,10 @@ def edit_quiz(request, quiz_id):
 @login_required
 def add_question(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
-    if request.user != quiz.course.instructor and not request.user.is_superuser:
+    course = quiz.course  # ✅ ดึง course จาก quiz
+    
+    # ✅ ตรวจสอบสิทธิ์
+    if request.user != course.instructor and not request.user.is_superuser:
         return HttpResponseForbidden("คุณไม่มีสิทธิ์เพิ่มคำถามในควิซนี้")
 
     if request.method == "POST":
@@ -91,17 +140,21 @@ def add_question(request, quiz_id):
             question.quiz = quiz
             question.save()
 
-            # เพิ่มตัวเลือกคำตอบ 4 ตัว
+            # ✅ สร้างคำตอบเปล่า 4 ตัวเลือกเริ่มต้น
             for i in range(1, 5):
                 Answer.objects.create(question=question, text=f"ตัวเลือก {i}")
 
-            messages.success(request, "เพิ่มคำถามเรียบร้อย ✅")
-            return redirect("quiz:edit_question", question.id)
+            messages.success(request, "✅ เพิ่มคำถามเรียบร้อยแล้ว")
+            # 🔁 กลับไปหน้า course_detail ของคอร์สนี้
+            return redirect("course:course_detail", pk=course.id)
     else:
         q_form = QuestionForm()
 
-    return render(request, "quiz/question_form.html", {"form": q_form, "title": f"Add Question to {quiz.title}"})
-
+    return render(
+        request,
+        "quiz/question_form.html",
+        {"form": q_form, "title": f"Add Question to {quiz.title}", "quiz": quiz, "course": course},
+    )
 
 # -------------------------
 # ✏️ Edit Question + Answers
@@ -110,29 +163,33 @@ def add_question(request, quiz_id):
 def edit_question(request, question_id):
     question = get_object_or_404(Question, id=question_id)
     quiz = question.quiz
-    if request.user != quiz.course.instructor and not request.user.is_superuser:
+    course = quiz.course
+
+    if request.user != course.instructor and not request.user.is_superuser:
         return HttpResponseForbidden("คุณไม่มีสิทธิ์แก้ไขคำถามนี้")
 
-    answers = question.answers.all()
+    answers = question.answers.all()  # ดึง 4 ตัวเลือกที่สร้างอัตโนมัติ
 
     if request.method == "POST":
         q_form = QuestionForm(request.POST, instance=question)
-        forms_valid = q_form.is_valid()
-        if forms_valid:
+        if q_form.is_valid():
             q_form.save()
-            for a in answers:
-                a.text = request.POST.get(f"answer_{a.id}", a.text)
-                a.is_correct = f"correct_{a.id}" in request.POST
-                a.save()
-            messages.success(request, "อัปเดตคำถามและคำตอบเรียบร้อยแล้ว ✅")
-            return redirect("quiz:edit_quiz", quiz.id)
+
+            # ✅ อัปเดตข้อความตัวเลือกและข้อที่ถูกต้อง
+            for ans in answers:
+                ans.text = request.POST.get(f"answer_{ans.id}", ans.text)
+                ans.is_correct = f"correct_{ans.id}" in request.POST
+                ans.save()
+
+            messages.success(request, "✅ บันทึกคำถามและตัวเลือกเรียบร้อยแล้ว")
+            return redirect("course:course_detail", pk=course.id)
     else:
         q_form = QuestionForm(instance=question)
 
     return render(
         request,
         "quiz/edit_question.html",
-        {"question": question, "q_form": q_form, "answers": answers, "title": f"Edit Question in {quiz.title}"}
+        {"question": question, "q_form": q_form, "answers": answers, "quiz": quiz, "course": course},
     )
 
 @login_required
@@ -173,32 +230,31 @@ def delete_quiz(request, quiz_id):
 def edit_question(request, question_id):
     question = get_object_or_404(Question, id=question_id)
     quiz = question.quiz
+    course = quiz.course
 
-    # ✅ ป้องกันไม่ให้คนอื่นนอกจาก instructor / superuser เข้ามาแก้
-    if request.user != quiz.course.instructor and not request.user.is_superuser:
+    if request.user != course.instructor and not request.user.is_superuser:
         return HttpResponseForbidden("คุณไม่มีสิทธิ์แก้ไขคำถามนี้")
 
-    # ดึงคำตอบทั้งหมดของคำถามนี้
-    answers = question.answers.all()
+    answers = question.answers.all()  # ดึง 4 ตัวเลือกจากฐานข้อมูล
 
     if request.method == "POST":
         q_form = QuestionForm(request.POST, instance=question)
         if q_form.is_valid():
             q_form.save()
 
-            # อัปเดตคำตอบ (answers)
-            for a in answers:
-                a.text = request.POST.get(f"answer_{a.id}", a.text)
-                a.is_correct = f"correct_{a.id}" in request.POST
-                a.save()
+            # ✅ อัปเดตข้อความและข้อที่ถูกต้อง
+            for ans in answers:
+                ans.text = request.POST.get(f"answer_{ans.id}", ans.text)
+                ans.is_correct = f"correct_{ans.id}" in request.POST
+                ans.save()
 
-            messages.success(request, "✅ แก้ไขคำถามเรียบร้อยแล้ว")
-            return redirect("quiz:edit_quiz", quiz.id)
+            messages.success(request, "✅ บันทึกคำถามและตัวเลือกเรียบร้อยแล้ว")
+            return redirect("course:course_detail", pk=course.id)
     else:
         q_form = QuestionForm(instance=question)
 
     return render(
         request,
         "quiz/edit_question.html",
-        {"q_form": q_form, "question": question, "answers": answers, "title": "Edit Question"},
+        {"question": question, "q_form": q_form, "answers": answers, "quiz": quiz, "course": course},
     )

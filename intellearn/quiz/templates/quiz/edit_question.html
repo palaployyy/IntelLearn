@@ -1,95 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container py-5" style="max-width: 850px;">
-  <div class="card shadow-lg border-0 p-4">
-    <h2 class="fw-bold text-primary mb-3">{{ title }}</h2>
-    <p class="text-muted mb-4">
-      คอร์ส: <strong>{{ quiz.course.title }}</strong><br>
-      สร้างเมื่อ: {{ quiz.created_at|date:"d M Y" }}
-    </p>
+<div class="container py-5" style="max-width: 800px;">
+  <h3 class="fw-bold mb-4">✏️ Edit Question in {{ quiz.title }}</h3>
 
-    <form method="post" class="mb-4">
-      {% csrf_token %}
-      <div class="mb-3">
-        <label class="form-label fw-semibold">ชื่อควิซ (Quiz Title)</label>
-        {{ form.title }}
-      </div>
+  <form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Question Text</label>
+      {{ q_form.text }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Points</label>
+      {{ q_form.points }}
+    </div>
 
-      <div class="mb-3">
-        <label class="form-label fw-semibold">รายละเอียด (Description)</label>
-        {{ form.description }}
-      </div>
+    <hr>
+    <h5 class="fw-semibold mb-3">ตัวเลือกคำตอบ</h5>
 
-      <div class="mb-3">
-        <label class="form-label fw-semibold">เกณฑ์ผ่าน (%)</label>
-        {{ form.pass_score }}
-      </div>
-
-      <div class="mb-4">
-        <label class="form-label fw-semibold">จำนวนคำถามทั้งหมด</label>
-        {{ form.total_questions }}
-      </div>
-
-      <div class="d-flex justify-content-end gap-2">
-        <button type="submit" class="btn btn-primary px-4">
-          💾 บันทึกการเปลี่ยนแปลง
-        </button>
-        <a href="{% url 'course:course_detail' quiz.course.id %}" class="btn btn-secondary px-4">
-          ⬅️ กลับไปที่คอร์ส
-        </a>
-      </div>
-    </form>
-
-    <hr class="my-4">
-
-    <!-- ===== แสดงรายการคำถาม ===== -->
-    <h4 class="fw-bold mb-3">📋 คำถามทั้งหมดในควิซนี้</h4>
-
-    {% for q in quiz.questions.all %}
-      <div class="card mb-3 shadow-sm p-3 border-0">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <h6 class="fw-semibold mb-1">Q{{ forloop.counter }}. {{ q.text }}</h6>
-            <p class="text-muted small mb-1">คะแนน: {{ q.points }}</p>
-
-            <ul class="list-unstyled small mb-2">
-              {% for ans in q.answers.all %}
-                <li>
-                  {% if ans.is_correct %}
-                    ✅ <strong>{{ ans.text }}</strong>
-                  {% else %}
-                    ❌ {{ ans.text }}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-
-          <div class="d-flex gap-2">
-            <a href="{% url 'quiz:edit_question' q.id %}" class="btn btn-warning btn-sm">✏️ แก้ไข</a>
-            <a href="{% url 'quiz:delete_question' q.id %}" class="btn btn-danger btn-sm"
-               onclick="return confirm('แน่ใจหรือไม่ว่าต้องการลบคำถามนี้?');">
-              🗑️ ลบ
-            </a>
-          </div>
+    {% for a in answers %}
+      <div class="mb-3 border rounded p-3">
+        <label class="form-label">Choice {{ forloop.counter }}</label>
+        <input
+          type="text"
+          name="answer_{{ a.id }}"
+          value="{{ a.text }}"
+          class="form-control mb-2"
+        >
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            name="correct_{{ a.id }}"
+            id="correct_{{ a.id }}"
+            {% if a.is_correct %}checked{% endif %}
+          >
+          <label class="form-check-label" for="correct_{{ a.id }}">
+            ✅ เป็นคำตอบที่ถูกต้อง
+          </label>
         </div>
-      </div>
-    {% empty %}
-      <div class="alert alert-light border text-center">
-        ยังไม่มีคำถามในควิซนี้
       </div>
     {% endfor %}
 
-    <div class="d-flex justify-content-between align-items-center mt-4">
-      <a href="{% url 'quiz:add_question' quiz.id %}" class="btn btn-success px-4">
-        ➕ เพิ่มคำถามใหม่
+    <div class="d-flex justify-content-between mt-3">
+      <a href="{% url 'course:course_detail' course.id %}" class="btn btn-outline-secondary">
+        ⬅ กลับไปหน้าคอร์ส
       </a>
-
-      <a href="{% url 'quiz:delete_quiz' quiz.id %}" class="btn btn-danger px-4"
-         onclick="return confirm('แน่ใจหรือไม่ว่าต้องการลบควิซนี้ทั้งหมด?');">
-        🗑️ ลบควิซนี้
-      </a>
+      <button type="submit" class="btn btn-success">💾 Save Changes</button>
     </div>
-  </div>
+  </form>
 </div>
 {% endblock %}
