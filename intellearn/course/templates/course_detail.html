@@ -103,32 +103,43 @@
       </div>
     {% endif %}
 
-    <!-- ===== Payment / Enroll ===== -->
+    <!-- ===== Payment / Enroll (แสดงเฉพาะเมื่อยังไม่ชำระ) ===== -->
     <div class="mt-4">
-      {% if user.is_authenticated and not is_paid %}
-        <form method="post" action="{% url 'payment:create_checkout' course.id %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-light w-100 fw-semibold">
-            💳 ชำระด้วยบัตร (Stripe Test)
-          </button>
-        </form>
-      {% elif not user.is_authenticated %}
+      {% if user.is_authenticated %}
+        {% if is_paid or enrollment %}
+          {# ชำระแล้ว/ลงทะเบียนแล้ว → ไม่ต้องโชว์ปุ่มชำระเงิน #}
+        {% else %}
+          <!-- ชำระด้วยบัตร (Stripe) -->
+          <form method="post" action="{% url 'payment:create_checkout' course.id %}" class="mb-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-light w-100 fw-semibold">
+              💳 ชำระด้วยบัตร (Stripe Test)
+            </button>
+          </form>
+
+          <!-- ชำระแบบโอน/อัปโหลดสลิป -->
+          <a class="btn btn-outline-light w-100 fw-semibold"
+             href="{% url 'payment:checkout' course.id %}">
+            🧾 ชำระแบบโอน/อัปโหลดสลิป
+          </a>
+        {% endif %}
+      {% else %}
         <a href="{% url 'authen:login' %}" class="btn btn-outline-light w-100 fw-semibold">
           🔑 Login to purchase this course
         </a>
       {% endif %}
     </div>
 
-    <!-- ===== Progress Bar ===== -->
+    <!-- ===== Progress Bar (เฉพาะผู้เรียนที่ชำระแล้ว/ผู้สอน/แอดมิน) ===== -->
     {% if is_paid or user == course.instructor or user.is_superuser %}
       <div class="mt-4">
         <div class="progress">
-          <div class="progress-bar bg-success" style="width: {{ pct }}%;" role="progressbar"
-               aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+          <div class="progress-bar bg-success" style="width: {{ pct|default:0 }}%;" role="progressbar"
+               aria-valuenow="{{ pct|default:0 }}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <div class="d-flex justify-content-between mt-1">
-          <small class="text-light-50">ความคืบหน้า</small>
-          <small class="fw-semibold text-white">{{ pct }}%</small>
+          <small class="text-white-50">ความคืบหน้า</small>
+          <small class="fw-semibold text-white">{{ pct|default:0 }}%</small>
         </div>
       </div>
     {% endif %}
@@ -157,6 +168,7 @@
               </a>
             {% endif %}
 
+            {# ปุ่ม Quiz: ไปทำควิซแรกของคอร์ส #}
             {% with first_quiz=course.quizzes.first %}
               {% if first_quiz %}
                 <button type="button"
@@ -167,6 +179,7 @@
               {% endif %}
             {% endwith %}
 
+            {# ปุ่ม Progress mark/unmark #}
             {% if user.is_authenticated and enrollment %}
               {% if lesson.id in completed_ids %}
                 <form method="post" action="{% url 'progress:unmark_done' lesson.id %}">

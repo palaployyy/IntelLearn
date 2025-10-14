@@ -34,48 +34,30 @@ def _set_if_field(model_obj, **fields):
 
 # --------- 1) โอน/อัปสลิป (mock/manual) ---------
 @login_required
-def payment_checkout(request: HttpRequest, course_id: int):
-    """
-    หน้าแบบฟอร์มโอน/อัปสลิป (mock)
-    template: payment/payment_form.html
-    """
+def payment_checkout(request, course_id):
     course = get_object_or_404(Course, id=course_id)
-
     if request.method == "POST":
         form = PaymentForm(request.POST, request.FILES, course=course)
         if form.is_valid():
-            payment: Payment = form.save(commit=False)
+            payment = form.save(commit=False)
             payment.student = request.user
             payment.course = course
             payment.amount = getattr(course, "price", Decimal("0.00"))
-
-            # เผื่อมี field currency ในโมเดล
-            _set_if_field(payment, currency="thb")
-
             if payment.method == Payment.METHOD_CARD:
-                # mock ให้สำเร็จทันที
                 payment.status = Payment.STATUS_PAID
-                _set_if_field(payment, paid_at=timezone.now())
+                payment.confirmed_at = timezone.now()
             else:
                 payment.status = Payment.STATUS_PENDING
-
             payment.save()
-
-            if payment.status == Payment.STATUS_PAID or getattr(payment, "is_paid", False):
+            if payment.status == Payment.STATUS_PAID:
                 _auto_enroll(request.user, course)
                 messages.success(request, "ชำระเงินสำเร็จ! ระบบได้เปิดสิทธิ์เข้าเรียนแล้ว")
             else:
-                messages.info(request, "ส่งคำขอชำระเงินแล้ว กรุณารอการตรวจสอบ")
-
+                messages.info(request, "ส่งคำขอชำระเงินแล้ว กรุณารอการตรวจสอบสลิป")
             return redirect("payment:success", payment_id=payment.id)
     else:
         form = PaymentForm(course=course)
-
-    return render(
-        request,
-        "payment/payment_form.html",
-        {"course": course, "form": form},
-    )
+    return render(request, "payment/payment_form.html", {"course": course, "form": form})
 
 
 # --------- 2) Stripe Checkout ---------

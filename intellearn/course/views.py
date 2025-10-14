@@ -7,11 +7,11 @@ from django.http import HttpResponseForbidden
 from django.db.models import Q, Count
 from django import forms
 from django.contrib import messages
-
 from .models import Course, Enrollment, Lesson
 from .forms import CourseForm, RegisterForm
 from payment.models import Payment
 from progress.models import LearningProgress
+from django.views import View
 
 # ✅ ป้องกัน error หาก progress app ยังไม่โหลด
 try:
@@ -242,15 +242,9 @@ def delete_course_view(request, course_id):
     return render(request, "confirm_delete.html", {"course": course})
 
 
-#
-
-
 # ===========================
 # หน้าแสดงปุ่มชำระเงินแบบง่าย (ถ้าต้องการ)
 # ===========================
-from django.views import View
-
-
 class PaymentView(View):
     def get(self, request, course_id):
         course = Course.objects.get(id=course_id)
