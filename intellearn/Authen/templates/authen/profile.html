@@ -1,67 +1,162 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container mt-5">
-    <div class="card shadow-lg p-4">
-        <div class="d-flex align-items-center mb-4">
-            {% if user.profile_picture %}
-                <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle me-3" width="100" height="100">
-            {% else %}
-                <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Default" class="rounded-circle me-3" width="100" height="100">
-            {% endif %}
-            <div>
-                <h3 class="mb-0">{{ user.username }}</h3>
-                <p class="text-muted mb-0">{{ user.email }}</p>
-                <span class="badge bg-primary text-uppercase">{{ user.role }}</span>
-            </div>
-        </div>
+<style>
+/* 🎨 Profile Card */
+.profile-card {
+  background: linear-gradient(145deg, #ffffff, #f6f9ff);
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  padding: 40px 30px;
+  transition: all 0.3s ease;
+}
 
-        <hr>
+.profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+/* 🧑 Avatar */
+.profile-avatar {
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  border: 3px solid #0d6efd;
+  object-fit: cover;
+}
 
-        <!-- ✅ ฟอร์มแก้ไขโปรไฟล์ -->
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label class="form-label">ชื่อผู้ใช้ (Username)</label>
-                <input type="text" name="username" value="{{ user.username }}" class="form-control">
-            </div>
+/* ✏️ Input Styles */
+.form-label {
+  font-weight: 600;
+  color: #333;
+}
 
-            <div class="mb-3">
-                <label class="form-label">อีเมล</label>
-                <input type="email" name="email" value="{{ user.email }}" class="form-control">
-            </div>
+.form-control {
+  border-radius: 10px;
+  border: 1px solid #ced4da;
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
 
-            <div class="mb-3">
-                <label class="form-label">อัปโหลดรูปโปรไฟล์</label>
-                <input type="file" name="profile_picture" accept="image/*" class="form-control">
-            </div>
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+}
 
-            <div class="mb-3">
-                <label class="form-label">Bio</label>
-                <textarea name="bio" class="form-control" rows="3">{{ user.bio }}</textarea>
-            </div>
+/* 🔘 Buttons */
+.btn-primary {
+  background: linear-gradient(135deg, #007bff, #00b4d8);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
 
-            <button type="submit" class="btn btn-primary w-100">💾 บันทึกการเปลี่ยนแปลง</button>
-        </form>
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0056b3, #0096c7);
+}
 
-        <hr class="my-4">
+.btn-warning {
+  border-radius: 10px;
+  font-weight: 600;
+}
 
-        <div class="d-flex gap-2">
-            <a href="{% url 'authen:change_password' %}" class="btn btn-warning flex-fill">🔒 เปลี่ยนรหัสผ่าน</a>
-            <form method="post" action="{% url 'authen:logout' %}" class="flex-fill d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger w-100">🚪 ออกจากระบบ</button>
-            </form>
-        </div>
+.btn-danger {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* 💬 Alerts */
+.alert {
+  border-radius: 10px;
+  border: none;
+  font-weight: 500;
+}
+
+/* 🧩 Divider */
+hr {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 🏷️ Role Badge */
+.role-badge {
+  background: #0d6efd;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+</style>
+
+<div class="container py-5">
+  <div class="profile-card mx-auto" style="max-width: 700px;">
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+      {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" alt="Profile" class="profile-avatar me-3" width="100" height="100">
+      {% else %}
+        <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Default" class="profile-avatar me-3" width="100" height="100">
+      {% endif %}
+      <div>
+        <h3 class="mb-0">{{ user.username }}</h3>
+        <p class="text-muted mb-1">{{ user.email }}</p>
+        <span class="role-badge">{{ user.role }}</span>
+      </div>
     </div>
+
+    <hr>
+
+    <!-- ✅ Alerts -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-3">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ✅ Profile Form -->
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">ชื่อผู้ใช้ (Username)</label>
+        <input type="text" name="username" value="{{ user.username }}" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">อีเมล</label>
+        <input type="email" name="email" value="{{ user.email }}" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">อัปโหลดรูปโปรไฟล์</label>
+        <input type="file" name="profile_picture" accept="image/*" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Bio</label>
+        <textarea name="bio" class="form-control" rows="3">{{ user.bio }}</textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 py-2">
+        💾 บันทึกการเปลี่ยนแปลง
+      </button>
+    </form>
+
+    <hr class="my-4">
+
+    <!-- Buttons -->
+    <div class="d-flex gap-2">
+      <a href="{% url 'authen:change_password' %}" class="btn btn-warning flex-fill">
+        🔒 เปลี่ยนรหัสผ่าน
+      </a>
+      <form method="post" action="{% url 'authen:logout' %}" class="flex-fill d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100">🚪 ออกจากระบบ</button>
+      </form>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

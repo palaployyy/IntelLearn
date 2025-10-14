@@ -23,7 +23,7 @@ urlpatterns = [
 
     # นักเรียน/ผู้สอน
     path("my-courses/", views.my_courses, name="my_courses"),
-    path("instructor/dashboard/", views.instructor_dashboard_view, name="instructor_dashboard"),
+
 
     # สมัครสมาชิก
     path("register/", views.register, name="register"),

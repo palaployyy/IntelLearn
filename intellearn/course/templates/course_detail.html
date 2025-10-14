@@ -2,135 +2,208 @@
 {% load static %}
 
 {% block content %}
+<style>
+/* ===== Header Section ===== */
+.course-header {
+  background: linear-gradient(135deg, #007bff, #00b4d8);
+  color: white;
+  border-radius: 15px;
+  padding: 40px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.course-header h2 {
+  font-weight: 700;
+}
+
+.course-header .price {
+  font-size: 1.4rem;
+  color: #aaf0c4;
+}
+
+/* ===== Lessons ===== */
+.lesson-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.lesson-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.lesson-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.lesson-desc {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.lesson-actions .btn {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+}
+
+/* ===== Progress Bar ===== */
+.progress {
+  height: 12px;
+  border-radius: 6px;
+  background-color: #e9ecef;
+}
+
+.progress-bar {
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+
+/* ===== Alerts ===== */
+.alert-warning {
+  background: #fff3cd;
+  border: none;
+  border-left: 6px solid #ffc107;
+  border-radius: 10px;
+  color: #856404;
+}
+
+/* ===== Add Lesson Button ===== */
+.btn-add-lesson {
+  background: #198754;
+  color: white;
+  border-radius: 8px;
+}
+
+.btn-add-lesson:hover {
+  background: #157347;
+}
+</style>
+
 <div class="container py-5">
 
   <!-- ===== Header ===== -->
-  <div class="row mb-4">
-    <div class="col-lg-9">
-      <h2 class="fw-bold mb-1">{{ course.title }}</h2>
-      <p class="text-muted mb-3">👨‍🏫 Instructor: {{ course.instructor.username }}</p>
+  <div class="course-header mb-5">
+    <h2 class="fw-bold mb-2">{{ course.title }}</h2>
+    <p class="mb-1">👨‍🏫 Instructor: <strong>{{ course.instructor.username }}</strong></p>
+    <p class="mb-3">{{ course.description }}</p>
 
-      {% if course.thumbnail_url %}
-        <img src="{{ course.thumbnail_url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
-      {% endif %}
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <p class="price fw-bold mb-0">💲 ฿{{ course.price }}</p>
+      <p class="mb-0">📚 {{ lessons.count }} lessons • 👩‍🎓 {{ students_count }} students</p>
+    </div>
 
-      <p class="mb-2">{{ course.description }}</p>
-
-      <p class="fw-bold text-success h5 mb-0">💲 ฿{{ course.price }}</p>
-
-      <div class="text-muted mt-2">
-        📚 {{ lessons.count }} lessons • 👩‍🎓 {{ students_count }} students
-      </div>
-
-      <!-- ===== Payment / Enroll =====
-           โชว์ปุ่มชำระเงินเฉพาะ "ล็อกอินแล้ว" และ "ยังไม่มี enrollment"
-      -->
+    {% if course.thumbnail_url %}
       <div class="mt-3">
-        {% if user.is_authenticated and not enrollment %}
-          <form method="post" action="{% url 'payment:create_checkout' course.id %}" class="mb-2">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success w-100">
-              💳 ชำระด้วยบัตร (Stripe Test)
-            </button>
-          </form>
-        {% endif %}
-        {% if not user.is_authenticated %}
-          <a href="{% url 'authen:login' %}" class="btn btn-primary w-100">🔑 Login to purchase</a>
-        {% endif %}
+        <img src="{{ course.thumbnail_url }}" class="img-fluid rounded shadow" alt="{{ course.title }}">
       </div>
+    {% endif %}
 
-      <!-- ===== Progress Bar ===== -->
+    <!-- ===== Payment / Enroll ===== -->
+    <div class="mt-4">
+      {% if user.is_authenticated and not is_paid %}
+        <form method="post" action="{% url 'payment:create_checkout' course.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-light w-100 fw-semibold">
+            💳 ชำระด้วยบัตร (Stripe Test)
+          </button>
+        </form>
+      {% elif not user.is_authenticated %}
+        <a href="{% url 'authen:login' %}" class="btn btn-outline-light w-100 fw-semibold">
+          🔑 Login to purchase this course
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- ===== Progress Bar ===== -->
+    {% if is_paid or user == course.instructor or user.is_superuser %}
       <div class="mt-4">
-        <div class="progress" style="height: 12px;">
-          <div
-            class="progress-bar bg-success"
-            role="progressbar"
-            style="width: {{ pct }}%;"
-            aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
-          </div>
+        <div class="progress">
+          <div class="progress-bar bg-success" style="width: {{ pct }}%;" role="progressbar"
+               aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <div class="d-flex justify-content-between mt-1">
-          <span class="text-muted small">ความคืบหน้า</span>
-          <span class="fw-semibold">{{ pct }}%</span>
+          <small class="text-light-50">ความคืบหน้า</small>
+          <small class="fw-semibold text-white">{{ pct }}%</small>
         </div>
       </div>
-
-    </div>
+    {% endif %}
   </div>
 
-  <hr>
-
   <!-- ===== Lessons List ===== -->
-  <h4 class="mt-4">Course Lessons</h4>
+  <div>
+    <h4 class="fw-bold mb-3">📘 Course Lessons</h4>
 
-  <ul class="list-group">
-    {% for lesson in lessons %}
-      <li class="list-group-item d-flex justify-content-between align-items-start">
-        <!-- Left: title/desc -->
-        <div class="me-3">
-          <strong>{{ lesson.order }}. {{ lesson.title }}</strong>
-          {% if lesson.content %}
-            <p class="mb-0 text-muted">{{ lesson.content|truncatewords:25 }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Right: actions -->
-        <div class="d-flex align-items-center gap-2">
-
-          <!-- ดูวิดีโอ -->
-          {% if lesson.video_url %}
-            <a href="{{ lesson.video_url }}" target="_blank"
-               class="btn btn-sm btn-outline-primary">
-              ▶ Watch
-            </a>
-          {% endif %}
-
-          <!-- ปุ่ม Quiz (ถ้าคอร์สมี quiz) -->
-          {% with first_quiz=course.quizzes.first %}
-            {% if first_quiz %}
-              <button type="button"
-                      class="btn btn-sm btn-outline-success"
-                      onclick="window.location.href='{% url 'quiz:take' first_quiz.id %}'">
-                📝 Quiz
-              </button>
+    {% if is_paid or user == course.instructor or user.is_superuser %}
+      {% for lesson in lessons %}
+        <div class="lesson-card d-flex justify-content-between align-items-start">
+          <!-- Left -->
+          <div>
+            <div class="lesson-title">{{ lesson.order }}. {{ lesson.title }}</div>
+            {% if lesson.content %}
+              <p class="lesson-desc mb-1">{{ lesson.content|truncatewords:25 }}</p>
             {% endif %}
-          {% endwith %}
+          </div>
 
-          <!-- ทำเสร็จ / ยกเลิกทำเสร็จ (เฉพาะผู้ที่มี enrollment) -->
-          {% if user.is_authenticated and enrollment %}
-            {% if lesson.id in completed_ids %}
-              <form method="post" action="{% url 'progress:unmark_done' lesson.id %}">
-                {% csrf_token %}
-                <button class="btn btn-sm btn-success">✓ ทำเสร็จ</button>
-              </form>
-            {% else %}
-              <form method="post" action="{% url 'progress:mark_done' lesson.id %}">
-                {% csrf_token %}
-                <button class="btn btn-sm btn-outline-success">ทำเสร็จ</button>
-              </form>
+          <!-- Right -->
+          <div class="lesson-actions d-flex align-items-center gap-2">
+            {% if lesson.video_url %}
+              <a href="{{ lesson.video_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                ▶ Watch
+              </a>
             {% endif %}
-          {% endif %}
 
-          <!-- ปุ่มแก้ไข/ลบสำหรับ Instructor -->
-          {% if user == course.instructor or user.is_superuser %}
-            <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-sm btn-warning">✏️ Edit</a>
-            <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
-          {% endif %}
+            {% with first_quiz=course.quizzes.first %}
+              {% if first_quiz %}
+                <button type="button"
+                        class="btn btn-outline-success btn-sm"
+                        onclick="window.location.href='{% url 'quiz:take' first_quiz.id %}'">
+                  📝 Quiz
+                </button>
+              {% endif %}
+            {% endwith %}
+
+            {% if user.is_authenticated and enrollment %}
+              {% if lesson.id in completed_ids %}
+                <form method="post" action="{% url 'progress:unmark_done' lesson.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-success btn-sm">✓ ทำเสร็จ</button>
+                </form>
+              {% else %}
+                <form method="post" action="{% url 'progress:mark_done' lesson.id %}">
+                  {% csrf_token %}
+                  <button class="btn btn-outline-success btn-sm">ทำเสร็จ</button>
+                </form>
+              {% endif %}
+            {% endif %}
+
+            {% if user == course.instructor or user.is_superuser %}
+              <a href="{% url 'course:edit_lesson' lesson.id %}" class="btn btn-warning btn-sm">✏️ Edit</a>
+              <a href="{% url 'course:delete_lesson' lesson.id %}" class="btn btn-danger btn-sm">🗑️ Delete</a>
+            {% endif %}
+          </div>
         </div>
-      </li>
-    {% empty %}
-      <li class="list-group-item">No lessons available yet.</li>
-    {% endfor %}
-  </ul>
+      {% empty %}
+        <div class="alert alert-light border">No lessons available yet.</div>
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-warning mt-3">
+        ⚠️ กรุณาชำระเงินก่อนเพื่อเข้าดูบทเรียนในคอร์สนี้
+      </div>
+    {% endif %}
+  </div>
 
-  <!-- ปุ่มเพิ่ม Lesson สำหรับ Instructor -->
+  <!-- Add Lesson (Instructor Only) -->
   {% if user == course.instructor or user.is_superuser %}
-    <div class="mt-3">
-      <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-success">
-        ➕ Add Lesson
+    <div class="text-center mt-4">
+      <a href="{% url 'course:add_lesson' course.id %}" class="btn btn-add-lesson px-4 py-2 fw-semibold">
+        ➕ Add New Lesson
       </a>
     </div>
   {% endif %}
-
 </div>
 {% endblock %}

@@ -96,20 +96,32 @@ class CourseDetailView(DetailView):
         course = self.get_object()
         user = self.request.user
 
+        # defaults
         context["lessons"] = course.lessons.all()
         context["students_count"] = course.enrollments.count()
-
-        # ค่าดีฟอลต์
         context["pct"] = 0
         context["completed_ids"] = set()
+        context["is_paid"] = False  # <── เริ่มต้น: ยังไม่ได้จ่าย
 
         if user.is_authenticated:
-            # หา enrollment ของผู้ใช้ในคอร์สนี้
+            # ✅ ตรวจสอบการชำระเงิน
+            has_payment = Payment.objects.filter(
+                student=user,
+                course=course,
+                status=Payment.STATUS_PAID,  # <── ต้องเป็น "paid" เท่านั้น
+            ).exists()
+
+            # ✅ Instructor / superuser ได้สิทธิ์โดยไม่ต้องจ่าย
+            if user == course.instructor or user.is_superuser:
+                has_payment = True
+
+            context["is_paid"] = has_payment
+
+            # หา enrollment สำหรับ progress bar
             enrollment = Enrollment.objects.filter(student=user, course=course).first()
             context["enrollment"] = enrollment
 
-            if enrollment:
-                # ดึง/สร้าง progress
+            if enrollment and has_payment:
                 progress, _ = LearningProgress.objects.get_or_create(enrollment=enrollment)
                 context["pct"] = progress.percentage
                 context["completed_ids"] = set(
@@ -230,42 +242,7 @@ def delete_course_view(request, course_id):
     return render(request, "confirm_delete.html", {"course": course})
 
 
-# ===========================
-# Instructor Dashboard (อย่างง่าย)
-# ===========================
-@login_required
-def instructor_dashboard_view(request):
-    # ตัวอย่าง: ใช้กลุ่มชื่อ instructor
-    if not request.user.groups.filter(name="instructor").exists() and not request.user.is_superuser:
-        return redirect("course:home")
-
-    courses = Course.objects.filter(instructor=request.user)
-
-    course_data = []
-    for c in courses:
-        enrollments = Enrollment.objects.filter(course=c)
-        total_students = enrollments.count()
-        completed = enrollments.filter(status="completed").count()
-        active = enrollments.filter(status="active").count()
-        dropped = enrollments.filter(status="dropped").count()
-
-        course_data.append(
-            {
-                "course": c,
-                "total_students": total_students,
-                "completed": completed,
-                "active": active,
-                "dropped": dropped,
-            }
-        )
-
-    context = {
-        "course_data": course_data,
-        "total_courses": courses.count(),
-        "total_students": Enrollment.objects.filter(course__in=courses).count(),
-        "total_revenue": sum([c.price * Enrollment.objects.filter(course=c).count() for c in courses]),
-    }
-    return render(request, "instructor_dashboard.html", context)
+#
 
 
 # ===========================
