@@ -56,7 +56,7 @@ def add_course(request):
             else:
                 course.instructor = None  # ✅ ให้ใส่ NULL ได้ (ต้องแก้ model ให้ instructor = null=True ด้วย)
             course.save()
-            return redirect("home")
+            return redirect("course:home")
     else:
         form = CourseForm()
     return render(request, "course_form.html", {"form": form, "title": "Add New Course"})
@@ -73,7 +73,7 @@ def edit_course(request, pk):
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():
             form.save()
-            return redirect("home")
+            return redirect("course:home")
     else:
         form = CourseForm(instance=course)
 
@@ -112,7 +112,7 @@ class CourseDetailView(DetailView):
 
         # ถ้า enroll ไปแล้วไม่ต้องซ้ำ
         Enrollment.objects.get_or_create(student=user, course=course)
-        return redirect("course_detail", pk=course.pk)
+        return redirect("course:course_detail", pk=course.pk)
 
 
 # ✅ Student: My Courses (แสดงคอร์สที่ลงทะเบียนไว้)
@@ -127,7 +127,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)  # auto login หลังสมัคร
-            return redirect("home")
+            return redirect("course:home")
     else:
         form = RegisterForm()
     return render(request, "registration/register.html", {"form": form})
@@ -154,7 +154,7 @@ def add_lesson(request, course_id):
             lesson = form.save(commit=False)
             lesson.course = course
             lesson.save()
-            return redirect("course_detail", pk=course.id)
+            return redirect("course:course_detail", pk=course.id)
     else:
         form = LessonForm()
 
@@ -169,7 +169,7 @@ def edit_lesson(request, lesson_id):
         form = LessonForm(request.POST, instance=lesson)
         if form.is_valid():
             form.save()
-            return redirect("course_detail", pk=lesson.course.id)
+            return redirect("course:course_detail", pk=lesson.course.id)
     else:
         form = LessonForm(instance=lesson)
 
@@ -181,4 +181,4 @@ def delete_lesson(request, lesson_id):
     lesson = get_object_or_404(Lesson, id=lesson_id)
     course_id = lesson.course.id
     lesson.delete()
-    return redirect("course_detail", pk=course_id)
+    return redirect("course:course_detail", pk=course_id)

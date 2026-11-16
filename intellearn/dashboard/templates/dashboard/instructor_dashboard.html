@@ -10,7 +10,7 @@
         {% for course in courses %}
             <li class="list-group-item d-flex justify-content-between">
                 <span>{{ course.title }}</span>
-                <a href="{% url 'edit_course' course.id %}" class="btn btn-sm btn-warning">✏ Edit</a>
+                <a href="{% url 'course:edit_course' course.id %}" class="btn btn-sm btn-warning">✏ Edit</a>
             </li>
         {% empty %}
             <li class="list-group-item">คุณยังไม่ได้สร้างคอร์ส</li>
