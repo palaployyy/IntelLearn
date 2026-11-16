@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "intellearn",
+      "runtimeExecutable": "D:/My Documents/IntelLearn/.venv/Scripts/python.exe",
+      "runtimeArgs": ["intellearn/manage.py", "runserver", "8000", "--settings=intellearn.settings_local"],
+      "port": 8000
+    }
+  ]
+}
